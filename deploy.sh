@@ -9,8 +9,8 @@ set -e  # Exit on error
 echo "🚀 Starting WealthFlow deployment to Google Cloud Run..."
 echo ""
 
-# Configuration (CHANGE THESE!)
-PROJECT_ID="wealthflow-app"  # Your Google Cloud Project ID
+# Configuration
+PROJECT_ID="neutobotix"  # Your Google Cloud Project ID
 SERVICE_NAME="wealthflow"
 REGION="us-central1"
 

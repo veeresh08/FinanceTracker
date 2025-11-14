@@ -1,6 +1,7 @@
 # ============================================
 # Google Cloud Build Configuration
-# Auto-deploy on git push
+# Project: neutobotix
+# Auto-deploy on git push to main branch
 # ============================================
 
 steps:
