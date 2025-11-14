@@ -1,0 +1,33 @@
+# ============================================
+# Docker Compose for Local Development
+# ============================================
+
+version: '3.8'
+
+services:
+  wealthflow:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wealthflow-app
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - DATABASE_PATH=/app/data/database.db
+    volumes:
+      # Persist database
+      - wealthflow-data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3001/api/auth/status"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  wealthflow-data:
+    driver: local
+

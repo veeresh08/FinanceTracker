@@ -1707,8 +1707,28 @@ app.delete('/api/investments/:id', (req: Request, res: Response) => {
   }
 });
 
+// ============================================
+// PRODUCTION: SERVE FRONTEND STATIC FILES
+// ============================================
+if (process.env.NODE_ENV === 'production') {
+  // Serve static files from React build
+  const frontendPath = path.join(__dirname, '../client/dist');
+  app.use(express.static(frontendPath));
+
+  // Handle React routing - send all non-API requests to index.html
+  app.get('*', (req: Request, res: Response) => {
+    if (!req.path.startsWith('/api/')) {
+      res.sendFile(path.join(frontendPath, 'index.html'));
+    }
+  });
+  
+  console.log('📦 Production mode: Serving frontend from', frontendPath);
+}
+
 // Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+const port = process.env.PORT || PORT;
+app.listen(port, () => {
+  console.log(`🚀 Server running on http://localhost:${port}`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 

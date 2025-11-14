@@ -1,0 +1,61 @@
+# Node modules
+node_modules
+client/node_modules
+npm-debug.log
+yarn-error.log
+
+# Build outputs
+client/dist
+client/build
+dist
+build
+
+# Development files
+.git
+.gitignore
+*.md
+!README.md
+
+# Database files (will be created in container)
+*.db
+*.db-shm
+*.db-wal
+server/database.db
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+.DS_Store
+
+# Testing
+coverage
+.nyc_output
+
+# Logs
+logs
+*.log
+
+# Temporary files
+tmp
+temp
+*.tmp
+
+# Documentation (not needed in container)
+docs
+FEATURE_ROADMAP.md
+GIT_SETUP_GUIDE.md
+PUSH_TO_GITHUB.md
+START_HERE.md
+SESSION_SUMMARY.md
+START_SERVERS.md
+WHATS_WORKING_NOW.md
+RESTART_FRONTEND.md
+🚀_ACTION_REQUIRED.md
+
