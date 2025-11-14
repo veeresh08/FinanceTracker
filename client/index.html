@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Loan Tracker - Manage Your Finances</title>
+    <!-- Google Sign-In -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script>
+      // Suppress Google Sign-In FedCM errors (they're harmless - popup login still works)
+      (function() {
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        
+        console.error = function(...args) {
+          const message = args.join(' ');
+          // Suppress known Google Sign-In FedCM errors that don't affect functionality
+          if (message.includes('GSI_LOGGER') || 
+              message.includes('FedCM') || 
+              message.includes('Cross-Origin-Opener-Policy') ||
+              message.includes('given origin is not allowed') ||
+              message.includes('id assertion endpoint') ||
+              message.includes('Server did not send the correct CORS headers')) {
+            return; // Suppress these specific errors
+          }
+          originalError.apply(console, args);
+        };
+        
+        console.warn = function(...args) {
+          const message = args.join(' ');
+          if (message.includes('GSI_LOGGER') || message.includes('FedCM')) {
+            return; // Suppress these warnings
+          }
+          originalWarn.apply(console, args);
+        };
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

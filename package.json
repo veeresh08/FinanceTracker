@@ -1,0 +1,41 @@
+{
+  "name": "loan-tracker",
+  "version": "1.0.0",
+  "description": "Comprehensive Loan Tracker with Income Analysis",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "nodemon --exec ts-node --transpile-only server/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "client": "cd client && npm run dev",
+    "server": "npm run dev",
+    "install-all": "npm install && cd client && npm install"
+  },
+  "keywords": [
+    "loan",
+    "tracker",
+    "finance"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/connect-sqlite3": "^0.9.5",
+    "@types/express-session": "^1.18.2",
+    "bcrypt": "^6.0.0",
+    "better-sqlite3": "^11.7.0",
+    "connect-sqlite3": "^0.9.16",
+    "cors": "^2.8.5",
+    "express": "^4.21.1",
+    "express-session": "^1.18.2",
+    "google-auth-library": "^10.4.2"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "nodemon": "^3.1.7",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.3"
+  }
+}
