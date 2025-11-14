@@ -44,20 +44,23 @@ CLOUD_BUILD_SA="${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com"
 echo "Cloud Build Service Account: $CLOUD_BUILD_SA"
 echo ""
 
-# Grant permissions
+# Grant permissions (with --condition=None to avoid policy conflict)
 gcloud projects add-iam-policy-binding $PROJECT_ID \
   --member="serviceAccount:${CLOUD_BUILD_SA}" \
   --role="roles/run.admin" \
+  --condition=None \
   --quiet
 
 gcloud projects add-iam-policy-binding $PROJECT_ID \
   --member="serviceAccount:${CLOUD_BUILD_SA}" \
   --role="roles/iam.serviceAccountUser" \
+  --condition=None \
   --quiet
 
 gcloud projects add-iam-policy-binding $PROJECT_ID \
   --member="serviceAccount:${CLOUD_BUILD_SA}" \
   --role="roles/storage.admin" \
+  --condition=None \
   --quiet
 
 echo -e "${GREEN}✅ Permissions granted!${NC}"
