@@ -750,29 +750,6 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
   }
 });
 
-    // Update last login
-updateLastLogin(authUser.id);
-
-    // Set session
-    req.session.authUserId = authUser.id;
-    req.session.userProfileId = Number(profile.id);
-    req.session.isAuthenticated = true;
-
-    res.json({
-      success: true,
-      user: {
-        id: authUser.id,
-        username: authUser.username,
-        email: authUser.email,
-        profile: profile
-      }
-    });
-  } catch (error: any) {
-    console.error('Login error:', error);
-    res.status(500).json({ error: 'Login failed' });
-  }
-});
-
 // Request OTP for phone login
 app.post('/api/auth/request-otp', async (req: Request, res: Response) => {
   try {
