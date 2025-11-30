@@ -164,7 +164,7 @@ const MonthlyTracker: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Month & Year */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Month</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Month</label>
                   <select
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     value={newRecord.month}
@@ -178,7 +178,7 @@ const MonthlyTracker: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Year</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Year</label>
                   <input
                     type="number"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -194,7 +194,7 @@ const MonthlyTracker: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Salary ({currencySymbol})</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Salary ({currencySymbol})</label>
                   <input
                     type="number"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -206,7 +206,7 @@ const MonthlyTracker: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Other Income ({currencySymbol})</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Other Income ({currencySymbol})</label>
                   <input
                     type="number"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -216,7 +216,7 @@ const MonthlyTracker: React.FC = () => {
                   />
                 </div>
 
-                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200">
                   <p className="text-xs text-gray-600 mb-1">Total Income</p>
                   <p className="text-xl font-bold text-green-600">
                     {currencySymbol} {((newRecord.salary || 0) + (newRecord.other_income || 0)).toLocaleString()}
@@ -229,7 +229,7 @@ const MonthlyTracker: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">🏠 Rent ({currencySymbol})</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">🏠 Rent ({currencySymbol})</label>
                   <input
                     type="number"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -240,7 +240,7 @@ const MonthlyTracker: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">🍔 Food & Groceries ({currencySymbol})</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">🍔 Food & Groceries ({currencySymbol})</label>
                   <input
                     type="number"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -251,7 +251,7 @@ const MonthlyTracker: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">🚗 Transport ({currencySymbol})</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">🚗 Transport ({currencySymbol})</label>
                   <input
                     type="number"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -262,7 +262,7 @@ const MonthlyTracker: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">💡 Utilities ({currencySymbol})</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">💡 Utilities ({currencySymbol})</label>
                   <input
                     type="number"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -273,7 +273,7 @@ const MonthlyTracker: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">🎬 Entertainment ({currencySymbol})</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">🎬 Entertainment ({currencySymbol})</label>
                   <input
                     type="number"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -283,7 +283,7 @@ const MonthlyTracker: React.FC = () => {
                   />
                 </div>
 
-                <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg border border-red-200">
                   <p className="text-xs text-gray-600 mb-1">Total Expenses</p>
                   <p className="text-xl font-bold text-red-600">
                     {currencySymbol} {((newRecord.rent || 0) + (newRecord.food || 0) + (newRecord.transport || 0) + (newRecord.utilities || 0) + (newRecord.entertainment || 0)).toLocaleString()}
@@ -292,7 +292,7 @@ const MonthlyTracker: React.FC = () => {
 
                 {/* Notes */}
                 <div className="md:col-span-3">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Notes</label>
                   <textarea
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     rows={2}
@@ -310,7 +310,7 @@ const MonthlyTracker: React.FC = () => {
                 <button 
                   type="button" 
                   onClick={() => setShowAddForm(false)}
-                  className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200"
+                  className="px-6 py-2 bg-gray-100 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-200"
                 >
                   Cancel
                 </button>

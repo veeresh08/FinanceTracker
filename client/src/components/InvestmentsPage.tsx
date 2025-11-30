@@ -221,13 +221,13 @@ const InvestmentsPage: React.FC = () => {
   if (loading) return <div className="p-8">Loading...</div>;
 
   return (
-    <div className="min-h-screen pb-20 pt-6 px-6">
+    <div className="min-h-screen bg-background py-6">
       <div className="max-w-7xl mx-auto px-4">
         {/* Header */}
         <div className="mb-6 flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">💹 Investment Portfolio</h1>
-            <p className="text-gray-600">Track your ESPP, SIP, Mutual Funds & more</p>
+            <h1 className="text-3xl font-bold text-foreground">💹 Investment Portfolio</h1>
+            <p className="text-muted-foreground">Track your ESPP, SIP, Mutual Funds & more</p>
           </div>
           <div className="flex gap-3">
             {/* Import/Export Buttons */}
@@ -256,7 +256,7 @@ const InvestmentsPage: React.FC = () => {
                 📤 Export
               </button>
               {/* Dropdown menu */}
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 hidden group-hover:block z-10">
+              <div className="absolute right-0 mt-2 w-48 bg-card rounded-lg shadow-lg border border-border hidden group-hover:block z-10">
                 <button
                   onClick={() => handleExport('json')}
                   className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded-t-lg"
@@ -302,9 +302,9 @@ const InvestmentsPage: React.FC = () => {
         </div>
 
         {/* Projection Calculator */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <div className="bg-card rounded-lg shadow p-6 mb-6">
           <h2 className="text-2xl font-bold mb-4">🎯 Investment Projection Calculator</h2>
-          <p className="text-sm text-gray-600 mb-4">Play around with these values to see your potential returns!</p>
+          <p className="text-sm text-muted-foreground mb-4">Play around with these values to see your potential returns!</p>
           
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <div>
@@ -349,19 +349,19 @@ const InvestmentsPage: React.FC = () => {
             <h3 className="text-lg font-bold mb-4">📊 Projection Results</h3>
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <p className="text-sm text-gray-600">Amount Invested</p>
+                <p className="text-sm text-muted-foreground">Amount Invested</p>
                 <p className="text-2xl font-bold text-blue-600">₹{projection.invested.toLocaleString()}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Expected Returns</p>
+                <p className="text-sm text-muted-foreground">Expected Returns</p>
                 <p className="text-2xl font-bold text-green-600">₹{Math.round(projection.returns).toLocaleString()}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Total Value</p>
+                <p className="text-sm text-muted-foreground">Total Value</p>
                 <p className="text-2xl font-bold text-purple-600">₹{Math.round(projection.total).toLocaleString()}</p>
               </div>
             </div>
-            <p className="mt-4 text-sm text-gray-700">
+            <p className="mt-4 text-sm text-gray-700 dark:text-gray-300">
               💡 If you invest ₹{principal.toLocaleString()} initially + ₹{monthly.toLocaleString()}/month for {years} years at {rate}% return,
               you'll have <strong>₹{Math.round(projection.total).toLocaleString()}</strong> 
               (Returns: ₹{Math.round(projection.returns).toLocaleString()} = {((projection.returns/projection.invested)*100).toFixed(1)}% gain)
@@ -371,7 +371,7 @@ const InvestmentsPage: React.FC = () => {
 
         {/* Add/Edit Investment Form */}
         {showAddForm && (
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
+          <div className="bg-card rounded-lg shadow p-6 mb-6">
             <h2 className="text-xl font-bold mb-4">{editingId ? '✏️ Edit Investment' : '➕ Add New Investment'}</h2>
             <form onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -407,10 +407,10 @@ const InvestmentsPage: React.FC = () => {
                 {/* ESPP-Specific Fields */}
                 {formData.type === 'espp' && (
                   <>
-                    <div className="md:col-span-2 bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
-                      <p className="text-sm font-semibold text-blue-800 mb-2">📈 ESPP Stock Details - Required for Calculations!</p>
+                    <div className="md:col-span-2 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 p-4 rounded">
+                      <p className="text-sm font-semibold text-blue-800 dark:text-blue-300 mb-2">📈 ESPP Stock Details - Required for Calculations!</p>
                       <p className="text-xs text-blue-600 mb-2">⚠️ <strong>Purchase Price is REQUIRED</strong> - Enter the price YOU paid per share after discount (e.g., $85.50). Without this, shares won't calculate!</p>
-                      <p className="text-xs text-gray-600">Current stock price is used to show your gains. Update it regularly to track performance.</p>
+                      <p className="text-xs text-muted-foreground">Current stock price is used to show your gains. Update it regularly to track performance.</p>
                     </div>
 
                     <div>
@@ -423,7 +423,7 @@ const InvestmentsPage: React.FC = () => {
                         className="w-full px-4 py-2 border rounded-lg"
                         placeholder="e.g., 85.50"
                       />
-                      <p className="text-xs text-gray-500 mt-1">Price YOU pay per share after discount</p>
+                      <p className="text-xs text-muted-foreground mt-1">Price YOU pay per share after discount</p>
                     </div>
 
                     <div>
@@ -436,7 +436,7 @@ const InvestmentsPage: React.FC = () => {
                         className="w-full px-4 py-2 border rounded-lg"
                         placeholder="e.g., 150.00"
                       />
-                      <p className="text-xs text-gray-500 mt-1">Current market price per share</p>
+                      <p className="text-xs text-muted-foreground mt-1">Current market price per share</p>
                     </div>
 
                     <div>
@@ -449,7 +449,7 @@ const InvestmentsPage: React.FC = () => {
                         className="w-full px-4 py-2 border rounded-lg"
                         placeholder="15"
                       />
-                      <p className="text-xs text-gray-500 mt-1">Usually 10-15%</p>
+                      <p className="text-xs text-muted-foreground mt-1">Usually 10-15%</p>
                     </div>
 
                     <div>
@@ -464,7 +464,7 @@ const InvestmentsPage: React.FC = () => {
                           ? (formData.monthly_contribution / (formData.purchase_price * 83)).toFixed(2) 
                           : formData.shares_per_month}
                         onChange={(e) => setFormData({...formData, shares_per_month: Number(e.target.value)})}
-                        className="w-full px-4 py-2 border rounded-lg bg-blue-50"
+                        className="w-full px-4 py-2 border rounded-lg bg-blue-50 dark:bg-blue-900/20"
                         placeholder="Auto-calculated"
                         disabled
                       />
@@ -482,7 +482,7 @@ const InvestmentsPage: React.FC = () => {
                         className="w-full px-4 py-2 border rounded-lg"
                         placeholder="24"
                       />
-                      <p className="text-xs text-gray-500 mt-1">Usually 24 months (2 years)</p>
+                      <p className="text-xs text-muted-foreground mt-1">Usually 24 months (2 years)</p>
                     </div>
 
                     <div>
@@ -494,23 +494,23 @@ const InvestmentsPage: React.FC = () => {
                         className="w-full px-4 py-2 border rounded-lg"
                         placeholder="6"
                       />
-                      <p className="text-xs text-gray-500 mt-1">Usually 6 months</p>
+                      <p className="text-xs text-muted-foreground mt-1">Usually 6 months</p>
                     </div>
 
                     {formData.current_stock_price > 0 && formData.purchase_price > 0 && (
-                      <div className="md:col-span-2 bg-green-50 border border-green-200 p-4 rounded">
-                        <p className="text-sm font-semibold text-green-800 mb-2">💰 Instant Gain Calculation</p>
+                      <div className="md:col-span-2 bg-green-50 dark:bg-green-900/20 border border-green-200 p-4 rounded">
+                        <p className="text-sm font-semibold text-green-800 dark:text-green-300 mb-2">💰 Instant Gain Calculation</p>
                         <div className="grid grid-cols-3 gap-4 text-xs">
                           <div>
-                            <p className="text-gray-600">Purchase Price</p>
+                            <p className="text-muted-foreground">Purchase Price</p>
                             <p className="font-bold">${formData.purchase_price.toFixed(2)}</p>
                           </div>
                           <div>
-                            <p className="text-gray-600">Current Price</p>
+                            <p className="text-muted-foreground">Current Price</p>
                             <p className="font-bold">${formData.current_stock_price.toFixed(2)}</p>
                           </div>
                           <div>
-                            <p className="text-gray-600">Gain per Share</p>
+                            <p className="text-muted-foreground">Gain per Share</p>
                             <p className="font-bold text-green-600">${(formData.current_stock_price - formData.purchase_price).toFixed(2)} ({((formData.current_stock_price - formData.purchase_price) / formData.purchase_price * 100).toFixed(1)}%)</p>
                           </div>
                         </div>
@@ -607,24 +607,24 @@ const InvestmentsPage: React.FC = () => {
             const progress = Math.min((monthsElapsed / inv.tenure_months) * 100, 100);
             
             return (
-              <div key={inv.id} className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-blue-500">
+              <div key={inv.id} className="bg-card rounded-lg shadow-lg p-6 border-l-4 border-blue-500">
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900">{inv.name}</h3>
-                    <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium mt-2">
+                    <h3 className="text-xl font-bold text-foreground">{inv.name}</h3>
+                    <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 dark:text-blue-300 rounded-full text-xs font-medium mt-2">
                       {inv.type.toUpperCase()}
                     </span>
                   </div>
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleEdit(inv)}
-                      className="text-blue-600 hover:text-blue-800 font-medium text-sm"
+                      className="text-blue-600 hover:text-blue-800 dark:text-blue-300 font-medium text-sm"
                     >
                       ✏️ Edit
                     </button>
                     <button
                       onClick={() => handleDelete(inv.id, inv.name)}
-                      className="text-red-600 hover:text-red-800 font-medium text-sm"
+                      className="text-red-600 hover:text-red-800 dark:text-red-300 font-medium text-sm"
                     >
                       🗑️ Delete
                     </button>
@@ -634,23 +634,23 @@ const InvestmentsPage: React.FC = () => {
                 {inv.type === 'espp' ? (
                   /* ESPP-Specific Display */
                   <div className="space-y-3 text-sm">
-                    <div className="bg-blue-50 p-3 rounded mb-3">
-                      <p className="text-xs font-semibold text-blue-800 mb-2">📈 Stock Details</p>
+                    <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded mb-3">
+                      <p className="text-xs font-semibold text-blue-800 dark:text-blue-300 mb-2">📈 Stock Details</p>
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <p className="text-xs text-gray-600">Purchase Price</p>
+                          <p className="text-xs text-muted-foreground">Purchase Price</p>
                           <p className="font-bold text-blue-600">${inv.purchase_price?.toFixed(2) || 0}</p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-600">Current Price</p>
+                          <p className="text-xs text-muted-foreground">Current Price</p>
                           <p className="font-bold text-green-600">${inv.current_stock_price?.toFixed(2) || 0}</p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-600">Discount</p>
+                          <p className="text-xs text-muted-foreground">Discount</p>
                           <p className="font-bold">{inv.discount_percent || 0}%</p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-600">Shares/Month</p>
+                          <p className="text-xs text-muted-foreground">Shares/Month</p>
                           <p className="font-bold">{inv.shares_per_month?.toFixed(2) || 0}</p>
                         </div>
                       </div>
@@ -659,23 +659,23 @@ const InvestmentsPage: React.FC = () => {
                     {(() => {
                       const esppGains = calculateESPPGains(inv);
                       return esppGains.totalShares > 0 ? (
-                        <div className="bg-green-50 p-3 rounded">
-                          <p className="text-xs font-semibold text-green-800 mb-2">💰 Current Holdings</p>
+                        <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded">
+                          <p className="text-xs font-semibold text-green-800 dark:text-green-300 mb-2">💰 Current Holdings</p>
                           <div className="grid grid-cols-2 gap-2 text-xs">
                             <div>
-                              <p className="text-gray-600">Total Shares</p>
+                              <p className="text-muted-foreground">Total Shares</p>
                               <p className="font-bold">{esppGains.totalShares.toFixed(2)}</p>
                             </div>
                             <div>
-                              <p className="text-gray-600">Invested</p>
+                              <p className="text-muted-foreground">Invested</p>
                               <p className="font-bold">${esppGains.totalInvested.toLocaleString()}</p>
                             </div>
                             <div>
-                              <p className="text-gray-600">Current Value</p>
+                              <p className="text-muted-foreground">Current Value</p>
                               <p className="font-bold text-green-600">${esppGains.currentValue?.toLocaleString()}</p>
                             </div>
                             <div>
-                              <p className="text-gray-600">Total Gain</p>
+                              <p className="text-muted-foreground">Total Gain</p>
                               <p className="font-bold text-green-600">${esppGains.totalGain.toLocaleString()} ({esppGains.gainPercent.toFixed(1)}%)</p>
                             </div>
                           </div>
@@ -684,11 +684,11 @@ const InvestmentsPage: React.FC = () => {
                     })()}
 
                     <div className="flex justify-between border-t pt-2">
-                      <span className="text-gray-600">Monthly Contribution:</span>
+                      <span className="text-muted-foreground">Monthly Contribution:</span>
                       <span className="font-bold">₹{inv.monthly_contribution.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Vesting Period:</span>
+                      <span className="text-muted-foreground">Vesting Period:</span>
                       <span className="font-bold">{inv.vesting_months || 24} months</span>
                     </div>
                   </div>
@@ -696,51 +696,51 @@ const InvestmentsPage: React.FC = () => {
                   /* Regular Investment Display */
                   <div className="space-y-3 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Principal:</span>
+                      <span className="text-muted-foreground">Principal:</span>
                       <span className="font-bold text-blue-600">₹{inv.principal.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Monthly SIP:</span>
+                      <span className="text-muted-foreground">Monthly SIP:</span>
                       <span className="font-bold">₹{inv.monthly_contribution.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Expected Return:</span>
+                      <span className="text-muted-foreground">Expected Return:</span>
                       <span className="font-bold text-green-600">{inv.expected_return_rate}% p.a.</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Tenure:</span>
+                      <span className="text-muted-foreground">Tenure:</span>
                       <span className="font-bold">{inv.tenure_months} months ({(inv.tenure_months/12).toFixed(1)} years)</span>
                     </div>
                   </div>
                 )}
                 
                 <div className="pt-3 border-t">
-                  <p className="text-xs text-gray-600 mb-1">Progress: {progress.toFixed(0)}% ({monthsElapsed}/{inv.tenure_months} months)</p>
+                  <p className="text-xs text-muted-foreground mb-1">Progress: {progress.toFixed(0)}% ({monthsElapsed}/{inv.tenure_months} months)</p>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div className="bg-blue-600 h-2 rounded-full" style={{width: `${progress}%`}}></div>
                   </div>
                 </div>
 
-                <div className="pt-3 border-t bg-green-50 -mx-6 px-6 py-3 mt-3 rounded-b-lg">
-                  <p className="text-xs text-gray-700 mb-2"><strong>Projected Maturity Value:</strong></p>
+                <div className="pt-3 border-t bg-green-50 dark:bg-green-900/20 -mx-6 px-6 py-3 mt-3 rounded-b-lg">
+                  <p className="text-xs text-gray-700 dark:text-gray-300 mb-2"><strong>Projected Maturity Value:</strong></p>
                   <div className="grid grid-cols-3 gap-2 text-xs">
                     <div>
-                      <p className="text-gray-600">Invested</p>
+                      <p className="text-muted-foreground">Invested</p>
                       <p className="font-bold">₹{projected.invested.toLocaleString()}</p>
                     </div>
                     <div>
-                      <p className="text-gray-600">Returns</p>
+                      <p className="text-muted-foreground">Returns</p>
                       <p className="font-bold text-green-600">₹{Math.round(projected.returns).toLocaleString()}</p>
                     </div>
                     <div>
-                      <p className="text-gray-600">Total</p>
+                      <p className="text-muted-foreground">Total</p>
                       <p className="font-bold text-purple-600">₹{Math.round(projected.total).toLocaleString()}</p>
                     </div>
                   </div>
                 </div>
 
                 {inv.notes && (
-                  <p className="mt-3 text-sm text-gray-600 italic">📝 {inv.notes}</p>
+                  <p className="mt-3 text-sm text-muted-foreground italic">📝 {inv.notes}</p>
                 )}
               </div>
             );
@@ -748,10 +748,10 @@ const InvestmentsPage: React.FC = () => {
         </div>
 
         {investments.length === 0 && !showAddForm && (
-          <div className="text-center py-12 bg-white rounded-lg">
+          <div className="text-center py-12 bg-card rounded-lg">
             <div className="text-6xl mb-4">📈</div>
-            <p className="text-xl text-gray-600 mb-2">No investments yet</p>
-            <p className="text-gray-500 mb-4">Start tracking your SIP, ESPP, Mutual Funds, and more!</p>
+            <p className="text-xl text-muted-foreground mb-2">No investments yet</p>
+            <p className="text-muted-foreground mb-4">Start tracking your SIP, ESPP, Mutual Funds, and more!</p>
             <button
               onClick={() => setShowAddForm(true)}
               className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"

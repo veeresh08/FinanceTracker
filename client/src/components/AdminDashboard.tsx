@@ -85,15 +85,15 @@ const AdminDashboard: React.FC = () => {
 
   const getActionTypeColor = (actionType: string) => {
     const colors: Record<string, string> = {
-      'login_success': 'bg-green-100 text-green-800',
-      'login_failed': 'bg-red-100 text-red-800',
-      'logout': 'bg-gray-100 text-gray-800',
-      'admin_view_users': 'bg-blue-100 text-blue-800',
-      'admin_view_logs': 'bg-purple-100 text-purple-800',
-      'admin_grant': 'bg-orange-100 text-orange-800',
-      'admin_revoke': 'bg-yellow-100 text-yellow-800',
+      'login_success': 'bg-green-100 text-green-800 dark:text-green-300',
+      'login_failed': 'bg-red-100 text-red-800 dark:text-red-300',
+      'logout': 'bg-gray-100 text-foreground',
+      'admin_view_users': 'bg-blue-100 text-blue-800 dark:text-blue-300',
+      'admin_view_logs': 'bg-purple-100 text-purple-800 dark:text-purple-300',
+      'admin_grant': 'bg-orange-100 text-orange-800 dark:text-orange-300',
+      'admin_revoke': 'bg-yellow-100 text-yellow-800 dark:text-yellow-300',
     };
-    return colors[actionType] || 'bg-gray-100 text-gray-800';
+    return colors[actionType] || 'bg-gray-100 text-foreground';
   };
 
   if (loading) {
@@ -107,21 +107,21 @@ const AdminDashboard: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto p-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <h1 className="text-3xl font-bold text-foreground mb-2">
           🔐 Admin Dashboard
         </h1>
-        <p className="text-gray-600">Manage users and monitor platform activity</p>
+        <p className="text-muted-foreground">Manage users and monitor platform activity</p>
       </div>
 
       {/* Tabs */}
-      <div className="mb-6 border-b border-gray-200">
+      <div className="mb-6 border-b border-border">
         <nav className="-mb-px flex space-x-8">
           <button
             onClick={() => setActiveTab('overview')}
             className={`py-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'overview'
                 ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                : 'border-transparent text-muted-foreground hover:text-gray-700 dark:text-gray-300 hover:border-gray-300'
             }`}
           >
             📊 Overview
@@ -131,7 +131,7 @@ const AdminDashboard: React.FC = () => {
             className={`py-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'users'
                 ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                : 'border-transparent text-muted-foreground hover:text-gray-700 dark:text-gray-300 hover:border-gray-300'
             }`}
           >
             👥 Users ({users.length})
@@ -141,7 +141,7 @@ const AdminDashboard: React.FC = () => {
             className={`py-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'activity'
                 ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                : 'border-transparent text-muted-foreground hover:text-gray-700 dark:text-gray-300 hover:border-gray-300'
             }`}
           >
             📋 Activity Logs ({activityLogs.length})
@@ -185,18 +185,18 @@ const AdminDashboard: React.FC = () => {
           </div>
 
           {/* Daily Active Users Chart */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-card rounded-lg shadow p-6">
             <h3 className="text-lg font-bold mb-4">📈 Daily Active Users (Last 7 Days)</h3>
             <div className="space-y-2">
               {statistics.daily_active_users.map((day, index) => (
                 <div key={index} className="flex items-center">
-                  <div className="w-32 text-sm text-gray-600">
+                  <div className="w-32 text-sm text-muted-foreground">
                     {new Date(day.date).toLocaleDateString()}
                   </div>
                   <div className="flex-1">
                     <div className="bg-blue-200 rounded-full h-6 relative">
                       <div
-                        className="bg-blue-500 h-6 rounded-full flex items-center justify-end pr-2"
+                        className="bg-blue-50 dark:bg-blue-900/200 h-6 rounded-full flex items-center justify-end pr-2"
                         style={{
                           width: `${(day.active_users / Math.max(...statistics.daily_active_users.map(d => d.active_users))) * 100}%`
                         }}
@@ -211,7 +211,7 @@ const AdminDashboard: React.FC = () => {
           </div>
 
           {/* Activity by Type */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-card rounded-lg shadow p-6">
             <h3 className="text-lg font-bold mb-4">🎯 Activity by Type (Last 30 Days)</h3>
             <div className="space-y-2">
               {statistics.activity_by_type.map((activity, index) => (
@@ -219,23 +219,23 @@ const AdminDashboard: React.FC = () => {
                   <span className={`px-3 py-1 rounded-full text-sm font-medium ${getActionTypeColor(activity.action_type)}`}>
                     {activity.action_type}
                   </span>
-                  <span className="text-gray-900 font-bold">{activity.count}</span>
+                  <span className="text-foreground font-bold">{activity.count}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Top Users */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-card rounded-lg shadow p-6">
             <h3 className="text-lg font-bold mb-4">🏆 Most Active Users (Last 30 Days)</h3>
             <div className="space-y-3">
               {statistics.top_users.map((user, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                <div key={index} className="flex items-center justify-between p-3 bg-background rounded">
                   <div>
                     <div className="font-medium">
                       {index + 1}. {user.username}
                     </div>
-                    <div className="text-sm text-gray-600">{user.email}</div>
+                    <div className="text-sm text-muted-foreground">{user.email}</div>
                   </div>
                   <div className="text-lg font-bold text-blue-600">
                     {user.activity_count} actions
@@ -250,42 +250,42 @@ const AdminDashboard: React.FC = () => {
       {/* Users Tab */}
       {activeTab === 'users' && (
         <div className="space-y-4">
-          <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="bg-card rounded-lg shadow overflow-hidden">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-background">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Auth Method</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Last Login</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">User</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Contact</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Auth Method</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Data</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Last Login</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Actions</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-card divide-y divide-gray-200">
                 {users.map(user => (
-                  <tr key={user.id} className="hover:bg-gray-50">
+                  <tr key={user.id} className="hover:bg-background">
                     <td className="px-6 py-4">
                       <div className="flex items-center">
                         <div>
-                          <div className="font-medium text-gray-900">
+                          <div className="font-medium text-foreground">
                             {user.username}
                             {user.is_admin === 1 && (
-                              <span className="ml-2 px-2 py-1 text-xs font-bold bg-red-100 text-red-800 rounded">
+                              <span className="ml-2 px-2 py-1 text-xs font-bold bg-red-100 text-red-800 dark:text-red-300 rounded">
                                 ADMIN
                               </span>
                             )}
                           </div>
-                          <div className="text-sm text-gray-500">{user.user_name}</div>
+                          <div className="text-sm text-muted-foreground">{user.user_name}</div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm">
                       <div>{user.email}</div>
-                      <div className="text-gray-500">{user.phone}</div>
+                      <div className="text-muted-foreground">{user.phone}</div>
                     </td>
                     <td className="px-6 py-4 text-sm">
-                      <span className="px-2 py-1 rounded bg-blue-100 text-blue-800">
+                      <span className="px-2 py-1 rounded bg-blue-100 text-blue-800 dark:text-blue-300">
                         {user.auth_method}
                       </span>
                     </td>
@@ -298,27 +298,27 @@ const AdminDashboard: React.FC = () => {
                         </div>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
+                    <td className="px-6 py-4 text-sm text-muted-foreground">
                       {formatDate(user.last_login)}
                     </td>
                     <td className="px-6 py-4 text-sm space-x-2">
                       <button
                         onClick={() => fetchUserDetails(user.id)}
-                        className="text-blue-600 hover:text-blue-800"
+                        className="text-blue-600 hover:text-blue-800 dark:text-blue-300"
                       >
                         View Details
                       </button>
                       {user.is_admin === 0 ? (
                         <button
                           onClick={() => makeAdmin(user.id)}
-                          className="text-green-600 hover:text-green-800"
+                          className="text-green-600 hover:text-green-800 dark:text-green-300"
                         >
                           Make Admin
                         </button>
                       ) : (
                         <button
                           onClick={() => removeAdmin(user.id)}
-                          className="text-red-600 hover:text-red-800"
+                          className="text-red-600 hover:text-red-800 dark:text-red-300"
                         >
                           Remove Admin
                         </button>
@@ -333,21 +333,21 @@ const AdminDashboard: React.FC = () => {
           {/* User Details Modal */}
           {selectedUser && userDetails && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6">
+              <div className="bg-card rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6">
                 <div className="flex justify-between items-start mb-4">
                   <h2 className="text-2xl font-bold">
                     👤 {selectedUser.username}
                   </h2>
                   <button
                     onClick={() => { setSelectedUser(null); setUserDetails(null); }}
-                    className="text-gray-500 hover:text-gray-700 text-2xl"
+                    className="text-muted-foreground hover:text-gray-700 dark:text-gray-300 text-2xl"
                   >
                     ×
                   </button>
                 </div>
 
                 <div className="space-y-4">
-                  <div className="bg-gray-50 p-4 rounded">
+                  <div className="bg-background p-4 rounded">
                     <h3 className="font-bold mb-2">Basic Info</h3>
                     <div className="grid grid-cols-2 gap-2 text-sm">
                       <div>Email: {userDetails.user.email}</div>
@@ -357,7 +357,7 @@ const AdminDashboard: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="bg-blue-50 p-4 rounded">
+                  <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded">
                     <h3 className="font-bold mb-2">💰 Loans ({userDetails.loans.length})</h3>
                     {userDetails.loans.map((loan: any) => (
                       <div key={loan.id} className="text-sm mb-2">
@@ -366,7 +366,7 @@ const AdminDashboard: React.FC = () => {
                     ))}
                   </div>
 
-                  <div className="bg-purple-50 p-4 rounded">
+                  <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded">
                     <h3 className="font-bold mb-2">📈 Investments ({userDetails.investments.length})</h3>
                     {userDetails.investments.map((inv: any) => (
                       <div key={inv.id} className="text-sm mb-2">
@@ -375,15 +375,15 @@ const AdminDashboard: React.FC = () => {
                     ))}
                   </div>
 
-                  <div className="bg-green-50 p-4 rounded max-h-64 overflow-y-auto">
+                  <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded max-h-64 overflow-y-auto">
                     <h3 className="font-bold mb-2">📋 Recent Activity</h3>
                     {userDetails.activity_logs.map((log: ActivityLog) => (
                       <div key={log.id} className="text-xs mb-2 pb-2 border-b">
                         <span className={`px-2 py-1 rounded ${getActionTypeColor(log.action_type)}`}>
                           {log.action_type}
                         </span>
-                        <div className="text-gray-600 mt-1">{log.action_description}</div>
-                        <div className="text-gray-500">{formatDate(log.created_at)}</div>
+                        <div className="text-muted-foreground mt-1">{log.action_description}</div>
+                        <div className="text-muted-foreground">{formatDate(log.created_at)}</div>
                       </div>
                     ))}
                   </div>
@@ -418,39 +418,39 @@ const AdminDashboard: React.FC = () => {
             </button>
           </div>
 
-          <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="bg-card rounded-lg shadow overflow-hidden">
             <div className="overflow-x-auto max-h-[600px]">
               <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50 sticky top-0">
+                <thead className="bg-background sticky top-0">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Time</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">IP</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Time</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">User</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Action</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Description</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">IP</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-card divide-y divide-gray-200">
                   {activityLogs
                     .filter(log => !filterActionType || log.action_type === filterActionType)
                     .map(log => (
-                      <tr key={log.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
+                      <tr key={log.id} className="hover:bg-background">
+                        <td className="px-6 py-4 text-sm text-muted-foreground whitespace-nowrap">
                           {formatDate(log.created_at)}
                         </td>
                         <td className="px-6 py-4 text-sm">
                           <div>{log.username || 'Unknown'}</div>
-                          <div className="text-gray-500 text-xs">{log.email}</div>
+                          <div className="text-muted-foreground text-xs">{log.email}</div>
                         </td>
                         <td className="px-6 py-4">
                           <span className={`px-2 py-1 rounded text-xs font-medium ${getActionTypeColor(log.action_type)}`}>
                             {log.action_type}
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-700">
+                        <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                           {log.action_description}
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-500">
+                        <td className="px-6 py-4 text-sm text-muted-foreground">
                           {log.ip_address}
                         </td>
                       </tr>

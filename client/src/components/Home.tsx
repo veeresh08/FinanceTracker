@@ -2,11 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../api';
 import { DashboardAnalytics, UserProfile } from '../types';
 import { useUser } from '../UserContext';
+import { TrendingUp, TrendingDown, Wallet, CreditCard, Calendar, Target, AlertTriangle, CheckCircle, DollarSign, PieChart, ArrowRight } from 'lucide-react';
 
 const Home: React.FC = () => {
   const { currentUser } = useUser();
   const [analytics, setAnalytics] = useState<DashboardAnalytics | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [investments, setInvestments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -18,12 +20,14 @@ const Home: React.FC = () => {
   const fetchAnalytics = async () => {
     if (!currentUser) return;
     try {
-      const [analyticsRes, profileRes] = await Promise.all([
+      const [analyticsRes, profileRes, investmentsRes] = await Promise.all([
         api.getDashboardAnalytics(currentUser.id),
-        api.getProfile(currentUser.id)
+        api.getProfile(currentUser.id),
+        api.getInvestments(currentUser.id)
       ]);
       setAnalytics(analyticsRes.data);
       setProfile(profileRes.data);
+      setInvestments(investmentsRes.data);
     } catch (error) {
       console.error('Error fetching analytics:', error);
     } finally {
@@ -33,160 +37,309 @@ const Home: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0f172a]">
-        <div className="relative w-24 h-24">
-          <div className="absolute inset-0 border-4 border-slate-800 rounded-full"></div>
-          <div className="absolute inset-0 border-4 border-t-sky-500 rounded-full animate-spin"></div>
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+          <p className="text-muted-foreground animate-pulse">Loading your financial data...</p>
         </div>
       </div>
     );
   }
 
   const summary = analytics?.summary;
-  const currencySymbol = profile?.currency === 'INR' ? '₹' : '$';
+  const currencySymbol = profile?.currency === 'INR' ? '₹' : profile?.currency === 'EUR' ? '€' : profile?.currency === 'GBP' ? '£' : '$';
 
   return (
-    <div className="min-h-screen pb-20">
-      {/* Hero Section */}
-      <div className="relative pt-20 pb-32 px-6 lg:px-12 overflow-hidden">
-        {/* Background glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-sky-500/20 rounded-full blur-[120px] -z-10 pointer-events-none"></div>
+    <div className="min-h-screen bg-background text-foreground p-4 md:p-8 transition-colors duration-300">
+      <div className="mx-auto max-w-7xl space-y-8">
         
-        <div className="max-w-4xl mx-auto text-center relative z-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800/50 border border-slate-700 mb-8 backdrop-blur-sm">
-            <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span className="text-sm font-medium text-slate-300">System Operational</span>
+        {/* Hero Section */}
+        <div className="text-center py-12 animate-in slide-in-from-bottom-5 fade-in duration-500">
+          <div className="inline-flex items-center justify-center p-2 bg-accent/50 rounded-full mb-6 backdrop-blur-sm">
+            <span className="text-sm font-medium px-3">👋 Welcome back</span>
           </div>
-          
-          <h1 className="text-6xl md:text-7xl font-bold text-white mb-6 tracking-tight leading-tight">
-            Master Your <br/>
-            <span className="gradient-text">Financial Universe</span>
+          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-4 bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
+            {currentUser?.user_name || 'User'}
           </h1>
-          
-          <p className="text-xl text-slate-400 mb-10 max-w-2xl mx-auto leading-relaxed">
-            Welcome back, <span className="text-white font-semibold">{currentUser?.user_name}</span>. 
-            Your personal command center for tracking loans, investments, and net worth.
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            Your complete financial command center. Track, analyze, and grow your wealth.
           </p>
-          
-          <div className="flex flex-wrap justify-center gap-4">
-            <button className="btn-primary btn-glow">
-              Go to Dashboard
-            </button>
-            <button className="btn-secondary">
-              View Reports
-            </button>
-          </div>
         </div>
-      </div>
 
-      {/* Quick Stats Grid */}
-      {summary && (
-        <div className="max-w-7xl mx-auto px-6 lg:px-12 -mt-20 relative z-20">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Quick Stats Grid */}
+        {summary && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-in slide-in-from-bottom-5 fade-in duration-700 delay-100">
             
             {/* Active Loans */}
-            <div className="card-midnight group cursor-pointer hover:-translate-y-2">
-              <div className="flex items-start justify-between mb-4">
-                <div className="p-3 rounded-xl bg-sky-500/10 text-sky-400 group-hover:bg-sky-500 group-hover:text-white transition-colors">
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                  </svg>
+            <div className="card hover:shadow-lg transition-all duration-300 border-l-4 border-l-blue-500">
+              <div className="card-header pb-2">
+                <div className="flex justify-between items-center">
+                  <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg text-blue-600 dark:text-blue-400">
+                    <CreditCard size={24} />
+                  </div>
+                  <span className="badge bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 border-none">Active</span>
                 </div>
-                <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">Loans</span>
               </div>
-              <h3 className="text-3xl font-bold text-white mb-1">{summary.totalLoans}</h3>
-              <p className="text-slate-400 text-sm">Active accounts</p>
+              <div className="card-content">
+                <div className="text-sm font-medium text-muted-foreground">Active Loans</div>
+                <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">{summary.totalLoans}</div>
+                <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                  Manage loans <ArrowRight size={12} />
+                </div>
+              </div>
             </div>
 
             {/* Total Debt */}
-            <div className="card-midnight group cursor-pointer hover:-translate-y-2">
-              <div className="flex items-start justify-between mb-4">
-                <div className="p-3 rounded-xl bg-rose-500/10 text-rose-400 group-hover:bg-rose-500 group-hover:text-white transition-colors">
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
-                  </svg>
+            <div className="card hover:shadow-lg transition-all duration-300 border-l-4 border-l-red-500">
+              <div className="card-header pb-2">
+                <div className="flex justify-between items-center">
+                  <div className="p-2 bg-red-100 dark:bg-red-900/20 rounded-lg text-red-600 dark:text-red-400">
+                    <TrendingDown size={24} />
+                  </div>
+                  <span className="badge bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300 border-none">Outstanding</span>
                 </div>
-                <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">Debt</span>
               </div>
-              <h3 className="text-3xl font-bold text-white mb-1">{currencySymbol}{summary.totalDebt.toLocaleString()}</h3>
-              <p className="text-slate-400 text-sm">Outstanding balance</p>
+              <div className="card-content">
+                <div className="text-sm font-medium text-muted-foreground">Total Debt</div>
+                <div className="text-3xl font-bold text-red-600 dark:text-red-400">{currencySymbol}{summary.totalDebt.toLocaleString()}</div>
+                <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                  Track progress <ArrowRight size={12} />
+                </div>
+              </div>
             </div>
 
             {/* Monthly Payment */}
-            <div className="card-midnight group cursor-pointer hover:-translate-y-2">
-              <div className="flex items-start justify-between mb-4">
-                <div className="p-3 rounded-xl bg-violet-500/10 text-violet-400 group-hover:bg-violet-500 group-hover:text-white transition-colors">
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">Monthly</span>
-              </div>
-              <h3 className="text-3xl font-bold text-white mb-1">{currencySymbol}{summary.monthlyPayments.toLocaleString()}</h3>
-              <p className="text-slate-400 text-sm">Next payment due</p>
-            </div>
-
-            {/* Debt Free Date */}
-            <div className="card-midnight group cursor-pointer hover:-translate-y-2">
-              <div className="flex items-start justify-between mb-4">
-                <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">Goal</span>
-              </div>
-              <h3 className="text-3xl font-bold text-white mb-1">{summary.yearsRemaining} Years</h3>
-              <p className="text-slate-400 text-sm">To financial freedom</p>
-            </div>
-
-          </div>
-        </div>
-      )}
-
-      {/* Feature Highlight */}
-      <div className="max-w-7xl mx-auto px-6 lg:px-12 mt-24">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-          <div>
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-              Intelligent Insights <br/>
-              <span className="text-slate-400">at your fingertips.</span>
-            </h2>
-            <p className="text-slate-400 text-lg mb-8 leading-relaxed">
-              We analyze your debt-to-income ratio, loan amortization schedules, and spending habits to provide actionable recommendations.
-            </p>
-            
-            <ul className="space-y-4">
-              {['Real-time net worth tracking', 'Smart loan closure strategies', 'Investment growth projections'].map((item, i) => (
-                <li key={i} className="flex items-center gap-3 text-slate-300">
-                  <div className="w-6 h-6 rounded-full bg-sky-500/20 flex items-center justify-center text-sky-400">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
+            <div className="card hover:shadow-lg transition-all duration-300 border-l-4 border-l-purple-500">
+              <div className="card-header pb-2">
+                <div className="flex justify-between items-center">
+                  <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-lg text-purple-600 dark:text-purple-400">
+                    <Calendar size={24} />
                   </div>
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-          
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-sky-500 to-violet-500 rounded-3xl blur-2xl opacity-20"></div>
-            <div className="card-midnight relative p-8 border-slate-700/50">
-              {/* Mock UI Element */}
-              <div className="flex justify-between items-center mb-8">
-                <div>
-                  <div className="h-2 w-24 bg-slate-700 rounded mb-2"></div>
-                  <div className="h-4 w-32 bg-slate-600 rounded"></div>
+                  <span className="badge bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300 border-none">Monthly</span>
                 </div>
-                <div className="h-10 w-10 rounded-full bg-slate-700"></div>
               </div>
-              <div className="space-y-4">
-                <div className="h-24 w-full bg-slate-800/50 rounded-xl border border-slate-700/50"></div>
-                <div className="h-24 w-full bg-slate-800/50 rounded-xl border border-slate-700/50"></div>
-                <div className="h-24 w-full bg-slate-800/50 rounded-xl border border-slate-700/50"></div>
+              <div className="card-content">
+                <div className="text-sm font-medium text-muted-foreground">Monthly Payment</div>
+                <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">{currencySymbol}{summary.monthlyPayments.toLocaleString()}</div>
+                <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                  View breakdown <ArrowRight size={12} />
+                </div>
               </div>
             </div>
+
+            {/* Debt Free Goal */}
+            <div className="card hover:shadow-lg transition-all duration-300 border-l-4 border-l-green-500">
+              <div className="card-header pb-2">
+                <div className="flex justify-between items-center">
+                  <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg text-green-600 dark:text-green-400">
+                    <Target size={24} />
+                  </div>
+                  <span className="badge bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 border-none">Goal</span>
+                </div>
+              </div>
+              <div className="card-content">
+                <div className="text-sm font-medium text-muted-foreground">Debt-Free In</div>
+                <div className="text-3xl font-bold text-green-600 dark:text-green-400">{summary.yearsRemaining}<span className="text-lg ml-1 text-muted-foreground font-medium">years</span></div>
+                <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                  Stay on track <ArrowRight size={12} />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Smart Insights */}
+        {analytics && analytics.recommendations && analytics.recommendations.length > 0 && (
+          <div className="card bg-accent/50 dark:bg-accent/10 border-none shadow-md animate-in slide-in-from-bottom-5 fade-in duration-700 delay-200">
+            <div className="card-header">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg text-yellow-600 dark:text-yellow-400">
+                  <AlertTriangle size={24} />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold">Smart Insights</h2>
+                  <p className="text-sm text-muted-foreground">AI-powered recommendations for you</p>
+                </div>
+              </div>
+            </div>
+            <div className="card-content space-y-3">
+              {analytics.recommendations.slice(0, 3).map((rec, index) => (
+                <div 
+                  key={index} 
+                  className={`p-4 rounded-lg border flex items-start gap-3 bg-background/50 backdrop-blur-sm
+                    ${rec.type === 'success' ? 'border-green-200 dark:border-green-900' : 
+                      rec.type === 'warning' ? 'border-yellow-200 dark:border-yellow-900' : 
+                      'border-blue-200 dark:border-blue-900'}`}
+                >
+                  <div className="mt-0.5">
+                    {rec.type === 'success' ? (
+                      <CheckCircle size={18} className="text-green-600 dark:text-green-400" />
+                    ) : rec.type === 'warning' ? (
+                      <AlertTriangle size={18} className="text-yellow-600 dark:text-yellow-400" />
+                    ) : (
+                      <AlertTriangle size={18} className="text-blue-600 dark:text-blue-400" />
+                    )}
+                  </div>
+                  <p className="text-sm font-medium">{rec.message}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Investment Portfolio */}
+        {investments.length > 0 && (
+          <div className="card overflow-hidden animate-in slide-in-from-bottom-5 fade-in duration-700 delay-300">
+            <div className="card-header bg-gradient-to-r from-indigo-500/10 to-purple-500/10">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-indigo-100 dark:bg-indigo-900/20 rounded-lg text-indigo-600 dark:text-indigo-400">
+                    <PieChart size={24} />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold">Investment Portfolio</h2>
+                    <p className="text-sm text-muted-foreground">Your wealth building dashboard</p>
+                  </div>
+                </div>
+                <span className="badge bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300 border-none px-3 py-1">
+                  Growing
+                </span>
+              </div>
+            </div>
+            <div className="card-content pt-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Total Invested */}
+                <div className="p-4 rounded-xl bg-background border shadow-sm hover:shadow-md transition-all">
+                  <div className="flex items-center gap-2 mb-2 text-muted-foreground text-sm">
+                    <Wallet size={16} className="text-blue-500" />
+                    Total Invested
+                  </div>
+                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                    {currencySymbol}{investments.reduce((sum, inv) => sum + (inv.principal || 0) + (inv.monthly_contribution * inv.tenure_months), 0).toLocaleString()}
+                  </p>
+                  <div className="w-full bg-secondary h-1.5 mt-3 rounded-full overflow-hidden">
+                    <div className="bg-blue-50 dark:bg-blue-900/200 h-full rounded-full" style={{ width: '100%' }}></div>
+                  </div>
+                </div>
+
+                {/* Current Value */}
+                <div className="p-4 rounded-xl bg-background border shadow-sm hover:shadow-md transition-all">
+                  <div className="flex items-center gap-2 mb-2 text-muted-foreground text-sm">
+                    <TrendingUp size={16} className="text-green-500" />
+                    Current Value
+                  </div>
+                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                    {currencySymbol}{investments.reduce((sum, inv) => sum + (inv.current_value || 0), 0).toLocaleString()}
+                  </p>
+                  <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400 mt-3 font-medium">
+                    <TrendingUp size={12} /> Growing steadily
+                  </div>
+                </div>
+
+                {/* Monthly SIP */}
+                <div className="p-4 rounded-xl bg-background border shadow-sm hover:shadow-md transition-all">
+                  <div className="flex items-center gap-2 mb-2 text-muted-foreground text-sm">
+                    <Calendar size={16} className="text-purple-500" />
+                    Monthly SIP
+                  </div>
+                  <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                    {currencySymbol}{investments.filter(i => i.status === 'active').reduce((sum, inv) => sum + inv.monthly_contribution, 0).toLocaleString()}
+                  </p>
+                  <span className="badge bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300 border-none mt-3 text-[10px]">
+                    Auto-invested
+                  </span>
+                </div>
+
+                {/* Active Plans */}
+                <div className="p-4 rounded-xl bg-background border shadow-sm hover:shadow-md transition-all">
+                  <div className="flex items-center gap-2 mb-2 text-muted-foreground text-sm">
+                    <Target size={16} className="text-orange-500" />
+                    Active Plans
+                  </div>
+                  <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                    {investments.filter(i => i.status === 'active').length}
+                  </p>
+                  <span className="badge bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 border-none mt-3 text-[10px]">
+                    All on track
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Financial Summary */}
+        {summary && profile && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in slide-in-from-bottom-5 fade-in duration-700 delay-400">
+            {/* Total Interest */}
+            <div className="card overflow-hidden">
+              <div className="p-6 bg-gradient-to-br from-red-500 to-rose-600 text-white">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-red-100 text-sm font-medium mb-1">Total Interest</p>
+                    <h3 className="text-3xl font-bold">{currencySymbol}{summary.totalInterest.toLocaleString()}</h3>
+                  </div>
+                  <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                    <TrendingUp size={20} className="text-white" />
+                  </div>
+                </div>
+                <div className="mt-4 pt-4 border-t border-white/20 flex justify-between items-center text-sm">
+                  <span className="text-red-100">Burden</span>
+                  <span className="font-bold bg-white/20 px-2 py-0.5 rounded text-white">
+                    {((summary.totalInterest / summary.totalPrincipal) * 100).toFixed(1)}%
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Monthly Income */}
+            <div className="card overflow-hidden">
+              <div className="p-6 bg-gradient-to-br from-green-500 to-emerald-600 text-white">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-green-100 text-sm font-medium mb-1">Monthly Income</p>
+                    <h3 className="text-3xl font-bold">{currencySymbol}{summary.totalIncome.toLocaleString()}</h3>
+                  </div>
+                  <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                    <DollarSign size={20} className="text-white" />
+                  </div>
+                </div>
+                <div className="mt-4 pt-4 border-t border-white/20 flex justify-between items-center text-sm">
+                  <span className="text-green-100">Savings potential</span>
+                  <span className="font-bold bg-white/20 px-2 py-0.5 rounded text-white">
+                    {currencySymbol}{summary.availableAfterLoans.toLocaleString()}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Principal */}
+            <div className="card overflow-hidden">
+              <div className="p-6 bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-blue-100 text-sm font-medium mb-1">Principal Amount</p>
+                    <h3 className="text-3xl font-bold">{currencySymbol}{summary.totalPrincipal.toLocaleString()}</h3>
+                  </div>
+                  <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                    <Wallet size={20} className="text-white" />
+                  </div>
+                </div>
+                <div className="mt-4 pt-4 border-t border-white/20 flex justify-between items-center text-sm">
+                  <span className="text-blue-100">Remaining</span>
+                  <span className="font-bold bg-white/20 px-2 py-0.5 rounded text-white">
+                    {currencySymbol}{summary.totalDebt.toLocaleString()}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Footer */}
+        <div className="text-center pt-8 pb-4 animate-in fade-in duration-700 delay-500">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/50 text-muted-foreground text-sm">
+            <span>🚀 You're on the right track! Keep managing your finances wisely.</span>
           </div>
         </div>
       </div>

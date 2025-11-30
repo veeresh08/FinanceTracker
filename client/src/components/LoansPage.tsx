@@ -295,13 +295,13 @@ const LoansPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] pb-20 pt-6 px-6">
+    <div className="min-h-[calc(100vh-4rem)] bg-background p-6 animate-in fade-in duration-500">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
           <div>
-            <h1 className="text-4xl font-bold text-white mb-2">Your Loans 💰</h1>
-            <p className="text-slate-400">Manage and track all your loans in one place</p>
+            <h1 className="text-4xl font-bold text-foreground mb-2">Your Loans 💰</h1>
+            <p className="text-muted-foreground">Manage and track all your loans in one place</p>
           </div>
           <div className="flex gap-3">
             {/* Import/Export Buttons */}
@@ -330,7 +330,7 @@ const LoansPage: React.FC = () => {
                 📤 Export
               </button>
               {/* Dropdown menu */}
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 hidden group-hover:block z-10">
+              <div className="absolute right-0 mt-2 w-48 bg-card rounded-lg shadow-lg border border-border hidden group-hover:block z-10">
                 <button
                   onClick={() => handleExport('json')}
                   className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded-t-lg"
@@ -360,8 +360,8 @@ const LoansPage: React.FC = () => {
 
         {/* Add Loan Form */}
         {showAddForm && (
-          <div className="card mb-8 bg-green-50 border-2 border-green-300">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">➕ Add New Loan</h2>
+          <div className="card mb-8 bg-green-50 dark:bg-green-900/20 border-2 border-green-300">
+            <h2 className="text-2xl font-bold text-foreground mb-6">➕ Add New Loan</h2>
             <form onSubmit={handleAddLoan}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -471,8 +471,8 @@ const LoansPage: React.FC = () => {
 
         {/* Edit Form */}
         {editingLoan && (
-          <div className="card mb-8 bg-blue-50 border-2 border-blue-300">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">✏️ Edit Loan</h2>
+          <div className="card mb-8 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-300">
+            <h2 className="text-2xl font-bold text-foreground mb-6">✏️ Edit Loan</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="label">Loan Name *</label>
@@ -547,8 +547,8 @@ const LoansPage: React.FC = () => {
               </div>
 
               <div className="col-span-2">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <p className="text-sm text-blue-800">
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 rounded-lg p-4">
+                  <p className="text-sm text-blue-800 dark:text-blue-300">
                     <strong>Note:</strong> Monthly payment will be automatically recalculated based on principal, interest rate, and tenure.
                   </p>
                 </div>
@@ -568,37 +568,37 @@ const LoansPage: React.FC = () => {
 
         {/* Loans Table */}
         <div className="card">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-6">📋 All Loans</h2>
+          <h2 className="text-2xl font-semibold text-foreground mb-6">📋 All Loans</h2>
           
           {loans.length === 0 ? (
             <div className="text-center py-12">
               <div className="text-6xl mb-4">📭</div>
-              <p className="text-xl text-gray-600 mb-2">No loans found</p>
-              <p className="text-gray-500">Add your first loan to get started</p>
+              <p className="text-xl text-muted-foreground mb-2">No loans found</p>
+              <p className="text-muted-foreground">Add your first loan to get started</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-100">
                   <tr>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Loan Name</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Type</th>
-                    <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Principal</th>
-                    <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Monthly EMI</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Start Date</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Payoff Date</th>
-                    <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Progress</th>
-                    <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Actions</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Loan Name</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Type</th>
+                    <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-300">Principal</th>
+                    <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-300">Monthly EMI</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Start Date</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Payoff Date</th>
+                    <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-300">Progress</th>
+                    <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {loans.map((loan) => (
-                    <tr key={loan.id} className="hover:bg-gray-50 transition-colors">
+                    <tr key={loan.id} className="hover:bg-background transition-colors">
                       <td className="px-4 py-4">
-                        <span className="font-medium text-gray-800">{loan.name}</span>
+                        <span className="font-medium text-foreground">{loan.name}</span>
                       </td>
                       <td className="px-4 py-4">
-                        <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 capitalize">
+                        <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:text-blue-300 capitalize">
                           {loan.type.replace('_', ' ')}
                         </span>
                       </td>
@@ -608,7 +608,7 @@ const LoansPage: React.FC = () => {
                       <td className="px-4 py-4 text-right font-bold text-purple-600">
                         ₹{loan.monthly_payment.toLocaleString()}
                       </td>
-                      <td className="px-4 py-4 text-left text-sm text-gray-700">
+                      <td className="px-4 py-4 text-left text-sm text-gray-700 dark:text-gray-300">
                         {new Date(loan.start_date).toLocaleDateString()}
                       </td>
                       <td className="px-4 py-4 text-left text-sm font-medium text-green-600">
@@ -627,7 +627,7 @@ const LoansPage: React.FC = () => {
                               <div className="w-20 bg-gray-200 rounded-full h-2">
                                 <div className="bg-green-600 h-2 rounded-full" style={{width: `${progress}%`}}></div>
                               </div>
-                              <span className="text-xs font-medium text-gray-700">{progress.toFixed(0)}%</span>
+                              <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{progress.toFixed(0)}%</span>
                             </div>
                           );
                         })()}
@@ -641,7 +641,7 @@ const LoansPage: React.FC = () => {
                         </button>
                         <button
                           onClick={() => handleDelete(loan.id, loan.name)}
-                          className="text-red-600 hover:text-red-800 font-medium text-sm"
+                          className="text-red-600 hover:text-red-800 dark:text-red-300 font-medium text-sm"
                         >
                           🗑️ Delete
                         </button>
@@ -686,7 +686,7 @@ const LoansPage: React.FC = () => {
         {/* Overall Loan Progress Dashboard */}
         {loans.length > 0 && (
           <div className="card mt-8 bg-gradient-to-br from-purple-50 to-blue-50 border-2 border-purple-200">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+            <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center">
               <span className="mr-3">📊</span>
               Overall Loan Repayment Progress
             </h2>
@@ -723,34 +723,34 @@ const LoansPage: React.FC = () => {
                 const savingsOnClosure = amountRemaining - preclosureAmount;
 
                 return (
-                  <div key={loan.id} className="bg-white rounded-lg p-5 shadow-md border border-gray-200">
+                  <div key={loan.id} className="bg-card rounded-lg p-5 shadow-md border border-border">
                     {/* Header with Installment Info */}
                     <div className="flex justify-between items-start mb-4">
                       <div>
-                        <h3 className="font-bold text-gray-900 text-lg">{loan.name}</h3>
-                        <p className="text-xs text-gray-600">Started: {new Date(loan.start_date).toLocaleDateString()}</p>
+                        <h3 className="font-bold text-foreground text-lg">{loan.name}</h3>
+                        <p className="text-xs text-muted-foreground">Started: {new Date(loan.start_date).toLocaleDateString()}</p>
                       </div>
                       <div className="text-right">
                         <div className="bg-blue-600 text-white px-3 py-1 rounded-lg mb-1">
                           <p className="text-xs font-medium">Current Installment</p>
                           <p className="text-lg font-bold">#{currentInstallmentNo} / {totalInstallments}</p>
                         </div>
-                        <p className="text-xs text-gray-600">{currentInstallmentDate.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}</p>
+                        <p className="text-xs text-muted-foreground">{currentInstallmentDate.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}</p>
                       </div>
                     </div>
 
                     {/* Current Month Details */}
                     <div className="grid grid-cols-3 gap-3 mb-3 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
                       <div>
-                        <p className="text-xs text-gray-700 font-medium">This Month EMI</p>
+                        <p className="text-xs text-gray-700 dark:text-gray-300 font-medium">This Month EMI</p>
                         <p className="text-sm font-bold text-blue-600">₹{loan.monthly_payment.toLocaleString()}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-700 font-medium">Principal Part</p>
+                        <p className="text-xs text-gray-700 dark:text-gray-300 font-medium">Principal Part</p>
                         <p className="text-sm font-bold text-green-600">₹{Math.round(currentMonthPrincipal).toLocaleString()}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-700 font-medium">Interest Part</p>
+                        <p className="text-xs text-gray-700 dark:text-gray-300 font-medium">Interest Part</p>
                         <p className="text-sm font-bold text-red-600">₹{Math.round(currentMonthInterest).toLocaleString()}</p>
                       </div>
                     </div>
@@ -759,11 +759,11 @@ const LoansPage: React.FC = () => {
                     <div className="mb-3 p-3 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg border border-orange-300">
                       <div className="flex justify-between items-center">
                         <div>
-                          <p className="text-xs text-gray-700 font-medium">Outstanding Principal (After This EMI)</p>
+                          <p className="text-xs text-gray-700 dark:text-gray-300 font-medium">Outstanding Principal (After This EMI)</p>
                           <p className="text-2xl font-bold text-orange-700">₹{Math.round(currentOutstanding).toLocaleString()}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-xs text-gray-600">Installments Left</p>
+                          <p className="text-xs text-muted-foreground">Installments Left</p>
                           <p className="text-xl font-bold text-purple-600">{remainingInstallments}</p>
                         </div>
                       </div>
@@ -773,7 +773,7 @@ const LoansPage: React.FC = () => {
                     <div className="mb-3">
                       <div className="flex justify-between text-xs mb-1">
                         <span className="text-blue-600 font-medium">Paid: ₹{amountPaid.toLocaleString()} ({currentInstallmentNo - 1} EMIs)</span>
-                        <span className="text-gray-600">Remaining: ₹{amountRemaining.toLocaleString()} ({remainingInstallments} EMIs)</span>
+                        <span className="text-muted-foreground">Remaining: ₹{amountRemaining.toLocaleString()} ({remainingInstallments} EMIs)</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-4 relative overflow-hidden">
                         <div 
@@ -790,41 +790,41 @@ const LoansPage: React.FC = () => {
                     {/* Payment Summary */}
                     <div className="grid grid-cols-3 gap-2 mt-3 text-xs border-t pt-3">
                       <div>
-                        <p className="text-gray-600">Principal</p>
+                        <p className="text-muted-foreground">Principal</p>
                         <p className="font-bold text-blue-600">₹{loan.principal.toLocaleString()}</p>
                       </div>
                       <div>
-                        <p className="text-gray-600">Interest</p>
+                        <p className="text-muted-foreground">Interest</p>
                         <p className="font-bold text-red-600">₹{(loan.total_interest || 0).toLocaleString()}</p>
                       </div>
                       <div>
-                        <p className="text-gray-600">Total to Bank</p>
+                        <p className="text-muted-foreground">Total to Bank</p>
                         <p className="font-bold text-purple-600">₹{totalToBePaid.toLocaleString()}</p>
                       </div>
                     </div>
 
                     {/* Outstanding & Preclosure Analysis */}
                     <div className="mt-4 p-3 bg-gradient-to-r from-orange-50 to-red-50 rounded-lg border border-orange-200">
-                      <h4 className="text-sm font-bold text-gray-800 mb-2 flex items-center">
+                      <h4 className="text-sm font-bold text-foreground mb-2 flex items-center">
                         <span className="mr-2">💡</span>
                         Preclosure Analysis (as of today)
                       </h4>
                       
                       <div className="grid grid-cols-2 gap-3 text-xs">
-                        <div className="bg-white p-2 rounded">
-                          <p className="text-gray-600">Outstanding Principal</p>
+                        <div className="bg-card p-2 rounded">
+                          <p className="text-muted-foreground">Outstanding Principal</p>
                           <p className="font-bold text-orange-600 text-sm">₹{outstandingPrincipal.toLocaleString()}</p>
                         </div>
-                        <div className="bg-white p-2 rounded">
-                          <p className="text-gray-600">Preclosure Charge (4%)</p>
+                        <div className="bg-card p-2 rounded">
+                          <p className="text-muted-foreground">Preclosure Charge (4%)</p>
                           <p className="font-bold text-red-600 text-sm">₹{preclosureCharge.toLocaleString()}</p>
                         </div>
-                        <div className="bg-white p-2 rounded">
-                          <p className="text-gray-600">Total Preclosure Amount</p>
+                        <div className="bg-card p-2 rounded">
+                          <p className="text-muted-foreground">Total Preclosure Amount</p>
                           <p className="font-bold text-purple-600 text-sm">₹{preclosureAmount.toLocaleString()}</p>
                         </div>
-                        <div className="bg-white p-2 rounded">
-                          <p className="text-gray-600">
+                        <div className="bg-card p-2 rounded">
+                          <p className="text-muted-foreground">
                             {savingsOnClosure >= 0 ? 'You Save 💰' : 'Extra Cost ⚠️'}
                           </p>
                           <p className={`font-bold text-sm ${savingsOnClosure >= 0 ? 'text-green-600' : 'text-red-600'}`}>
@@ -865,10 +865,10 @@ const LoansPage: React.FC = () => {
                     {/* Extra Payment Calculator */}
                     {showExtraPaymentCalc === loan.id && (
                       <div className="mt-4 p-4 bg-gradient-to-r from-green-50 to-teal-50 rounded-lg border-2 border-green-300">
-                        <h4 className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+                        <h4 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
                           💰 Extra Payment Impact Calculator
                         </h4>
-                        <p className="text-xs text-gray-600 mb-3">
+                        <p className="text-xs text-muted-foreground mb-3">
                           See how an extra one-time payment reduces your loan tenure and saves you money!
                         </p>
                         
@@ -877,7 +877,7 @@ const LoansPage: React.FC = () => {
                           if (!impact) return null;
                           
                           return (
-                            <div key={amount} className="mb-3 p-3 bg-white rounded-lg border border-green-200">
+                            <div key={amount} className="mb-3 p-3 bg-card rounded-lg border border-green-200">
                               <div className="flex justify-between items-center mb-2">
                                 <span className="font-bold text-green-700">Pay Extra: ₹{amount.toLocaleString()}</span>
                                 {amount === currentOutstanding && (
@@ -885,18 +885,18 @@ const LoansPage: React.FC = () => {
                                 )}
                               </div>
                               <div className="grid grid-cols-2 gap-2 text-xs">
-                                <div className="bg-blue-50 p-2 rounded">
-                                  <p className="text-gray-600">New Outstanding</p>
+                                <div className="bg-blue-50 dark:bg-blue-900/20 p-2 rounded">
+                                  <p className="text-muted-foreground">New Outstanding</p>
                                   <p className="font-bold text-blue-700">₹{impact.newOutstanding.toLocaleString()}</p>
                                 </div>
-                                <div className="bg-purple-50 p-2 rounded">
-                                  <p className="text-gray-600">Months Saved</p>
+                                <div className="bg-purple-50 dark:bg-purple-900/20 p-2 rounded">
+                                  <p className="text-muted-foreground">Months Saved</p>
                                   <p className="font-bold text-purple-700">{impact.tenureReduction} months</p>
                                 </div>
-                                <div className="bg-green-50 p-2 rounded col-span-2">
-                                  <p className="text-gray-600">Total EMI Savings</p>
+                                <div className="bg-green-50 dark:bg-green-900/20 p-2 rounded col-span-2">
+                                  <p className="text-muted-foreground">Total EMI Savings</p>
                                   <p className="font-bold text-green-700 text-lg">₹{impact.emiSavings.toLocaleString()}</p>
-                                  <p className="text-xs text-gray-500 mt-1">
+                                  <p className="text-xs text-muted-foreground mt-1">
                                     Net Benefit: ₹{(impact.emiSavings - amount).toLocaleString()}
                                     {impact.emiSavings - amount > 0 ? ' 🎉' : ' (Not worth it)'}
                                   </p>
@@ -906,7 +906,7 @@ const LoansPage: React.FC = () => {
                           );
                         })}
                         
-                        <p className="text-xs text-gray-600 mt-2 italic">
+                        <p className="text-xs text-muted-foreground mt-2 italic">
                           💡 Tip: Extra payments reduce principal immediately, saving you interest!
                         </p>
                       </div>
@@ -915,7 +915,7 @@ const LoansPage: React.FC = () => {
                     {/* Expandable Amortization Schedule Table */}
                     {expandedSchedule === loan.id && (
                       <div className="mt-4 border-t pt-4">
-                        <h4 className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+                        <h4 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
                           📋 Complete Amortization Schedule (Like Bank Statement)
                         </h4>
                         
@@ -943,14 +943,14 @@ const LoansPage: React.FC = () => {
                                     key={index} 
                                     className={`
                                       ${isCurrent ? 'bg-yellow-100 border-l-4 border-l-yellow-500 font-bold' : ''}
-                                      ${isPast ? 'bg-green-50 text-gray-600' : ''}
-                                      ${!isPast && !isCurrent ? 'bg-white' : ''}
-                                      hover:bg-blue-50 transition-colors
+                                      ${isPast ? 'bg-green-50 dark:bg-green-900/20 text-muted-foreground' : ''}
+                                      ${!isPast && !isCurrent ? 'bg-card' : ''}
+                                      hover:bg-blue-50 dark:bg-blue-900/20 transition-colors
                                     `}
                                   >
                                     <td className="px-3 py-2 text-left">
                                       {installment.installmentNo}
-                                      {isCurrent && <span className="ml-2 text-xs bg-yellow-500 text-white px-2 py-0.5 rounded-full">CURRENT</span>}
+                                      {isCurrent && <span className="ml-2 text-xs bg-yellow-50 dark:bg-yellow-900/200 text-white px-2 py-0.5 rounded-full">CURRENT</span>}
                                     </td>
                                     <td className="px-3 py-2 text-left whitespace-nowrap">
                                       {installmentDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
@@ -983,7 +983,7 @@ const LoansPage: React.FC = () => {
                                 <td className="px-3 py-2 text-right text-red-600">
                                   ₹{(loan.total_interest || 0).toLocaleString()}
                                 </td>
-                                <td className="px-3 py-2 text-right text-gray-500">
+                                <td className="px-3 py-2 text-right text-muted-foreground">
                                   ₹0
                                 </td>
                               </tr>
@@ -991,14 +991,14 @@ const LoansPage: React.FC = () => {
                           </table>
                         </div>
 
-                        <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200 text-xs">
-                          <p className="text-gray-700">
+                        <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 text-xs">
+                          <p className="text-gray-700 dark:text-gray-300">
                             <strong>📌 How to Read:</strong> 
                             <span className="ml-2">🟨 Yellow = Current Month</span>
                             <span className="ml-2">🟩 Green = Paid</span>
                             <span className="ml-2">⬜ White = Future</span>
                           </p>
-                          <p className="text-gray-700 mt-1">
+                          <p className="text-gray-700 dark:text-gray-300 mt-1">
                             <strong>Note:</strong> "Closing Principal" shows the outstanding loan balance after each EMI payment (like your bank statement).
                           </p>
                         </div>
@@ -1009,11 +1009,11 @@ const LoansPage: React.FC = () => {
               })}
 
               {/* Overall Summary */}
-              <div className="bg-white rounded-lg p-4 shadow-lg border-2 border-blue-300">
-                <h3 className="font-bold text-gray-900 mb-3">🎯 Combined Loan Summary</h3>
+              <div className="bg-card rounded-lg p-4 shadow-lg border-2 border-blue-300">
+                <h3 className="font-bold text-foreground mb-3">🎯 Combined Loan Summary</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
-                    <p className="text-xs text-gray-600">Total Paid So Far</p>
+                    <p className="text-xs text-muted-foreground">Total Paid So Far</p>
                     <p className="text-lg font-bold text-blue-600">
                       ₹{loans.filter(l => l.status === 'active').reduce((sum, loan) => {
                         const elapsed = Math.max(0, Math.floor((new Date().getTime() - new Date(loan.start_date).getTime()) / (1000 * 60 * 60 * 24 * 30)));
@@ -1022,7 +1022,7 @@ const LoansPage: React.FC = () => {
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600">Still to Pay</p>
+                    <p className="text-xs text-muted-foreground">Still to Pay</p>
                     <p className="text-lg font-bold text-orange-600">
                       ₹{loans.filter(l => l.status === 'active').reduce((sum, loan) => {
                         const elapsed = Math.max(0, Math.floor((new Date().getTime() - new Date(loan.start_date).getTime()) / (1000 * 60 * 60 * 24 * 30)));
@@ -1032,7 +1032,7 @@ const LoansPage: React.FC = () => {
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600">Total Outstanding</p>
+                    <p className="text-xs text-muted-foreground">Total Outstanding</p>
                     <p className="text-lg font-bold text-purple-600">
                       ₹{loans.filter(l => l.status === 'active').reduce((sum, loan) => {
                         const elapsed = Math.max(0, Math.floor((new Date().getTime() - new Date(loan.start_date).getTime()) / (1000 * 60 * 60 * 24 * 30)));
@@ -1043,7 +1043,7 @@ const LoansPage: React.FC = () => {
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600">Debt-Free In</p>
+                    <p className="text-xs text-muted-foreground">Debt-Free In</p>
                     <p className="text-lg font-bold text-purple-600">
                       {(() => {
                         const maxRemaining = Math.max(...loans.filter(l => l.status === 'active').map(loan => {
@@ -1063,11 +1063,11 @@ const LoansPage: React.FC = () => {
         {/* Smart Loan Closure Recommendations */}
         {loans.filter(l => l.status === 'active').length > 0 && (
           <div className="card mt-8 bg-gradient-to-br from-green-50 to-teal-50 border-2 border-green-300">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+            <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center">
               <span className="mr-3">🎯</span>
               Smart Loan Closure Recommendations
             </h2>
-            <p className="text-sm text-gray-700 mb-6">
+            <p className="text-sm text-gray-700 dark:text-gray-300 mb-6">
               Based on interest rates, outstanding amounts, and potential savings, here's the optimal order to close your loans:
             </p>
 
@@ -1101,16 +1101,16 @@ const LoansPage: React.FC = () => {
               return (
                 <div className="space-y-4">
                   {loanAnalysis.map((loan, index) => (
-                    <div key={loan.id} className="bg-white rounded-lg p-4 shadow border-l-4" 
+                    <div key={loan.id} className="bg-card rounded-lg p-4 shadow border-l-4" 
                          style={{borderLeftColor: index === 0 ? '#10b981' : index === 1 ? '#f59e0b' : '#6b7280'}}>
                       <div className="flex justify-between items-start mb-3">
                         <div className="flex items-center gap-3">
-                          <span className={`text-2xl font-bold ${index === 0 ? 'text-green-600' : index === 1 ? 'text-orange-600' : 'text-gray-600'}`}>
+                          <span className={`text-2xl font-bold ${index === 0 ? 'text-green-600' : index === 1 ? 'text-orange-600' : 'text-muted-foreground'}`}>
                             #{index + 1}
                           </span>
                           <div>
-                            <h3 className="font-bold text-gray-900 text-lg">{loan.name}</h3>
-                            <p className="text-xs text-gray-600">Interest Rate: {loan.interest_rate}% p.a.</p>
+                            <h3 className="font-bold text-foreground text-lg">{loan.name}</h3>
+                            <p className="text-xs text-muted-foreground">Interest Rate: {loan.interest_rate}% p.a.</p>
                           </div>
                         </div>
                         {index === 0 && (
@@ -1121,22 +1121,22 @@ const LoansPage: React.FC = () => {
                       </div>
 
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs mb-3">
-                        <div className="bg-blue-50 p-2 rounded">
-                          <p className="text-gray-600">Outstanding</p>
+                        <div className="bg-blue-50 dark:bg-blue-900/20 p-2 rounded">
+                          <p className="text-muted-foreground">Outstanding</p>
                           <p className="font-bold text-blue-700">₹{loan.outstandingPrincipal.toLocaleString()}</p>
                         </div>
-                        <div className="bg-purple-50 p-2 rounded">
-                          <p className="text-gray-600">Preclosure Amount</p>
+                        <div className="bg-purple-50 dark:bg-purple-900/20 p-2 rounded">
+                          <p className="text-muted-foreground">Preclosure Amount</p>
                           <p className="font-bold text-purple-700">₹{loan.preclosureAmount.toLocaleString()}</p>
                         </div>
-                        <div className="bg-green-50 p-2 rounded">
-                          <p className="text-gray-600">Potential Savings</p>
+                        <div className="bg-green-50 dark:bg-green-900/20 p-2 rounded">
+                          <p className="text-muted-foreground">Potential Savings</p>
                           <p className={`font-bold ${loan.savingsOnClosure >= 0 ? 'text-green-700' : 'text-red-700'}`}>
                             {loan.savingsOnClosure >= 0 ? '+' : ''}₹{loan.savingsOnClosure.toLocaleString()}
                           </p>
                         </div>
-                        <div className="bg-orange-50 p-2 rounded">
-                          <p className="text-gray-600">Months Left</p>
+                        <div className="bg-orange-50 dark:bg-orange-900/20 p-2 rounded">
+                          <p className="text-muted-foreground">Months Left</p>
                           <p className="font-bold text-orange-700">{loan.remaining} months</p>
                         </div>
                       </div>
@@ -1144,8 +1144,8 @@ const LoansPage: React.FC = () => {
                       {/* Recommendation */}
                       <div className={`text-xs p-2 rounded ${
                         loan.savingsOnClosure >= 0 
-                          ? 'bg-green-100 text-green-800 border border-green-300' 
-                          : 'bg-orange-100 text-orange-800 border border-orange-300'
+                          ? 'bg-green-100 text-green-800 dark:text-green-300 border border-green-300' 
+                          : 'bg-orange-100 text-orange-800 dark:text-orange-300 border border-orange-300'
                       }`}>
                         {loan.savingsOnClosure >= 0 ? (
                           <>
@@ -1193,7 +1193,7 @@ const LoansPage: React.FC = () => {
                           <p>
                             <strong>Step 1: Close {loanAnalysis[0].name} First</strong>
                           </p>
-                          <div className="bg-white/20 p-2 rounded ml-4">
+                          <div className="bg-card/20 p-2 rounded ml-4">
                             <p>• Current: Pay {loanAnalysis[0].remaining} EMIs = ₹{(loanAnalysis[0].remaining * loanAnalysis[0].monthly_payment).toLocaleString()}</p>
                             <p>• If closed today: Pay ₹{loanAnalysis[0].preclosureAmount.toLocaleString()}</p>
                             <p className="text-yellow-300 font-bold">• You save: ₹{loanAnalysis[0].savingsOnClosure.toLocaleString()}!</p>
@@ -1206,7 +1206,7 @@ const LoansPage: React.FC = () => {
                           <p>
                             <strong>Step 2: Then Close {loanAnalysis[1].name}</strong>
                           </p>
-                          <div className="bg-white/20 p-2 rounded ml-4">
+                          <div className="bg-card/20 p-2 rounded ml-4">
                             <p>• Additional savings: ₹{loanAnalysis[1].savingsOnClosure.toLocaleString()}</p>
                           </div>
                         </>
@@ -1243,7 +1243,7 @@ const LoansPage: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
               {/* Pie Chart - Loan Distribution by Principal */}
               <div className="card">
-                <h3 className="text-xl font-bold text-gray-800 mb-4">📊 Loan Distribution (by Principal)</h3>
+                <h3 className="text-xl font-bold text-foreground mb-4">📊 Loan Distribution (by Principal)</h3>
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie
@@ -1270,7 +1270,7 @@ const LoansPage: React.FC = () => {
 
               {/* Bar Chart - Monthly Payment Comparison */}
               <div className="card">
-                <h3 className="text-xl font-bold text-gray-800 mb-4">💰 Monthly Payment by Loan</h3>
+                <h3 className="text-xl font-bold text-foreground mb-4">💰 Monthly Payment by Loan</h3>
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart
                     data={loans.map(loan => ({
@@ -1290,7 +1290,7 @@ const LoansPage: React.FC = () => {
 
             {/* Interest vs Principal Comparison */}
             <div className="card mt-8">
-              <h3 className="text-xl font-bold text-gray-800 mb-4">📈 Interest vs Principal Breakdown</h3>
+              <h3 className="text-xl font-bold text-foreground mb-4">📈 Interest vs Principal Breakdown</h3>
               <ResponsiveContainer width="100%" height={350}>
                 <BarChart
                   data={loans.map(loan => ({
@@ -1326,18 +1326,18 @@ const LoansPage: React.FC = () => {
           
           {showFormulaInfo && (
             <div className="mt-4 p-6 bg-gradient-to-br from-gray-50 to-blue-50 rounded-lg border-2 border-gray-300 shadow-lg">
-              <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+              <h3 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
                 📐 Mathematical Formulas Used in Our Calculations
               </h3>
               
               <div className="space-y-6">
                 {/* EMI Calculation */}
-                <div className="bg-white p-4 rounded-lg border border-blue-200">
-                  <h4 className="font-bold text-blue-800 mb-2">1️⃣ Monthly EMI Calculation</h4>
-                  <div className="bg-blue-50 p-3 rounded font-mono text-sm mb-2">
+                <div className="bg-card p-4 rounded-lg border border-blue-200">
+                  <h4 className="font-bold text-blue-800 dark:text-blue-300 mb-2">1️⃣ Monthly EMI Calculation</h4>
+                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded font-mono text-sm mb-2">
                     EMI = P × r × (1 + r)^n / [(1 + r)^n - 1]
                   </div>
-                  <div className="text-xs text-gray-700 space-y-1">
+                  <div className="text-xs text-gray-700 dark:text-gray-300 space-y-1">
                     <p><strong>Where:</strong></p>
                     <p>• P = Principal loan amount</p>
                     <p>• r = Monthly interest rate = (Annual Rate / 12 / 100)</p>
@@ -1349,14 +1349,14 @@ const LoansPage: React.FC = () => {
                 </div>
 
                 {/* Monthly Interest & Principal */}
-                <div className="bg-white p-4 rounded-lg border border-green-200">
-                  <h4 className="font-bold text-green-800 mb-2">2️⃣ Each Month's Interest & Principal Breakdown</h4>
-                  <div className="bg-green-50 p-3 rounded font-mono text-sm mb-2">
+                <div className="bg-card p-4 rounded-lg border border-green-200">
+                  <h4 className="font-bold text-green-800 dark:text-green-300 mb-2">2️⃣ Each Month's Interest & Principal Breakdown</h4>
+                  <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded font-mono text-sm mb-2">
                     <p>Interest Payment = Outstanding Balance × (Annual Rate / 12 / 100)</p>
                     <p className="mt-1">Principal Payment = EMI - Interest Payment</p>
                     <p className="mt-1">New Outstanding = Old Outstanding - Principal Payment</p>
                   </div>
-                  <div className="text-xs text-gray-700">
+                  <div className="text-xs text-gray-700 dark:text-gray-300">
                     <p className="text-green-700 mt-2">
                       <strong>Why Interest Decreases:</strong> As you pay EMI, outstanding reduces → Less interest next month → More principal next month!
                     </p>
@@ -1364,13 +1364,13 @@ const LoansPage: React.FC = () => {
                 </div>
 
                 {/* Current Installment */}
-                <div className="bg-white p-4 rounded-lg border border-purple-200">
-                  <h4 className="font-bold text-purple-800 mb-2">3️⃣ Current Installment Number</h4>
-                  <div className="bg-purple-50 p-3 rounded font-mono text-sm mb-2">
+                <div className="bg-card p-4 rounded-lg border border-purple-200">
+                  <h4 className="font-bold text-purple-800 dark:text-purple-300 mb-2">3️⃣ Current Installment Number</h4>
+                  <div className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded font-mono text-sm mb-2">
                     Months Elapsed = (Today's Year - Start Year) × 12 + (Today's Month - Start Month)
                     <p className="mt-1">Current Installment = Months Elapsed + 1</p>
                   </div>
-                  <div className="text-xs text-gray-700">
+                  <div className="text-xs text-gray-700 dark:text-gray-300">
                     <p className="text-purple-700 mt-2">
                       <strong>Example:</strong> Start: Feb 2024, Today: Nov 2024 → 9 months elapsed → Installment #10
                     </p>
@@ -1378,9 +1378,9 @@ const LoansPage: React.FC = () => {
                 </div>
 
                 {/* Outstanding Principal */}
-                <div className="bg-white p-4 rounded-lg border border-orange-200">
-                  <h4 className="font-bold text-orange-800 mb-2">4️⃣ Outstanding Principal (Bank Method)</h4>
-                  <div className="bg-orange-50 p-3 rounded font-mono text-sm mb-2">
+                <div className="bg-card p-4 rounded-lg border border-orange-200">
+                  <h4 className="font-bold text-orange-800 dark:text-orange-300 mb-2">4️⃣ Outstanding Principal (Bank Method)</h4>
+                  <div className="bg-orange-50 dark:bg-orange-900/20 p-3 rounded font-mono text-sm mb-2">
                     <p>We calculate month-by-month using amortization:</p>
                     <p className="mt-1">For each month 1 to N:</p>
                     <p className="ml-4">• Calculate interest on current balance</p>
@@ -1388,7 +1388,7 @@ const LoansPage: React.FC = () => {
                     <p className="ml-4">• Reduce balance by principal</p>
                     <p className="mt-1">Outstanding = Balance after current month's EMI</p>
                   </div>
-                  <div className="text-xs text-gray-700">
+                  <div className="text-xs text-gray-700 dark:text-gray-300">
                     <p className="text-orange-700 mt-2">
                       <strong>Note:</strong> This matches exactly what your bank shows as "Closing Principal" in their amortization schedule!
                     </p>
@@ -1396,15 +1396,15 @@ const LoansPage: React.FC = () => {
                 </div>
 
                 {/* Preclosure Calculation */}
-                <div className="bg-white p-4 rounded-lg border border-red-200">
-                  <h4 className="font-bold text-red-800 mb-2">5️⃣ Preclosure Amount & Savings</h4>
-                  <div className="bg-red-50 p-3 rounded font-mono text-sm mb-2">
+                <div className="bg-card p-4 rounded-lg border border-red-200">
+                  <h4 className="font-bold text-red-800 dark:text-red-300 mb-2">5️⃣ Preclosure Amount & Savings</h4>
+                  <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded font-mono text-sm mb-2">
                     <p>Preclosure Charge = Outstanding Principal × 4%</p>
                     <p className="mt-1">Total Preclosure = Outstanding + Preclosure Charge</p>
                     <p className="mt-1">Remaining EMIs Cost = Remaining Months × Monthly EMI</p>
                     <p className="mt-1 text-green-700 font-bold">Savings = Remaining EMIs Cost - Total Preclosure</p>
                   </div>
-                  <div className="text-xs text-gray-700">
+                  <div className="text-xs text-gray-700 dark:text-gray-300">
                     <p className="text-red-700 mt-2">
                       <strong>If Savings &gt; 0:</strong> You save money by closing early! ✅<br/>
                       <strong>If Savings &lt; 0:</strong> Better to continue EMIs ⚠️
@@ -1413,7 +1413,7 @@ const LoansPage: React.FC = () => {
                 </div>
 
                 {/* Extra Payment Impact */}
-                <div className="bg-white p-4 rounded-lg border border-teal-200">
+                <div className="bg-card p-4 rounded-lg border border-teal-200">
                   <h4 className="font-bold text-teal-800 mb-2">6️⃣ Extra Payment Impact</h4>
                   <div className="bg-teal-50 p-3 rounded font-mono text-sm mb-2">
                     <p>New Outstanding = Current Outstanding - Extra Amount</p>
@@ -1421,7 +1421,7 @@ const LoansPage: React.FC = () => {
                     <p className="mt-1">Months Saved = Current Remaining - New Tenure</p>
                     <p className="mt-1 text-green-700 font-bold">Total Savings = Months Saved × EMI</p>
                   </div>
-                  <div className="text-xs text-gray-700">
+                  <div className="text-xs text-gray-700 dark:text-gray-300">
                     <p className="text-teal-700 mt-2">
                       <strong>Impact:</strong> Extra payment reduces principal → Less interest → Shorter tenure → Saves EMIs!
                     </p>
@@ -1429,12 +1429,12 @@ const LoansPage: React.FC = () => {
                 </div>
 
                 {/* Priority Score */}
-                <div className="bg-white p-4 rounded-lg border border-indigo-200">
+                <div className="bg-card p-4 rounded-lg border border-indigo-200">
                   <h4 className="font-bold text-indigo-800 mb-2">7️⃣ Loan Priority Score (For Recommendations)</h4>
                   <div className="bg-indigo-50 p-3 rounded font-mono text-sm mb-2">
                     Priority Score = (Interest Rate × 10) + (Savings / 10000)
                   </div>
-                  <div className="text-xs text-gray-700">
+                  <div className="text-xs text-gray-700 dark:text-gray-300">
                     <p><strong>Logic:</strong></p>
                     <p>• Higher interest rate = Costs more = Higher priority</p>
                     <p>• Higher savings = Save more = Higher priority</p>
@@ -1455,8 +1455,8 @@ const LoansPage: React.FC = () => {
                 </p>
               </div>
               
-              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-300 rounded-lg">
-                <p className="text-sm text-gray-800">
+              <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-300 rounded-lg">
+                <p className="text-sm text-foreground">
                   <strong>💡 Verification Tip:</strong> Compare the "Closing Principal" in our detailed schedule 
                   with your bank's amortization statement - they should match exactly for the same month!
                 </p>

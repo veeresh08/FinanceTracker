@@ -236,13 +236,13 @@ const LoanDetails: React.FC<LoanDetailsProps> = ({ loanId, onBack }) => {
           <table className="w-full">
             <thead className="bg-gray-50 sticky top-0">
               <tr>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">#</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Date</th>
-                <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Payment</th>
-                <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Principal</th>
-                <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Interest</th>
-                <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Balance</th>
-                <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Total Interest</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">#</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Date</th>
+                <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-300">Payment</th>
+                <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-300">Principal</th>
+                <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-300">Interest</th>
+                <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-300">Balance</th>
+                <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-300">Total Interest</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -261,7 +261,7 @@ const LoanDetails: React.FC<LoanDetailsProps> = ({ loanId, onBack }) => {
                   <td className="px-4 py-2 text-sm text-right text-red-600">
                     ${payment.interest.toFixed(2)}
                   </td>
-                  <td className="px-4 py-2 text-sm text-right font-medium text-gray-700">
+                  <td className="px-4 py-2 text-sm text-right font-medium text-gray-700 dark:text-gray-300">
                     ${payment.balance.toFixed(2)}
                   </td>
                   <td className="px-4 py-2 text-sm text-right text-gray-600">

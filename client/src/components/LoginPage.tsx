@@ -183,15 +183,15 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 p-4">
       {/* Background Animation */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-white/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-card/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-card/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
       </div>
 
       <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8 relative z-10">
         {/* Left Side - Image/Branding */}
         <div className="hidden lg:flex flex-col justify-center items-center text-white p-12">
           <div className="mb-8">
-            <div className="w-32 h-32 bg-white/20 backdrop-blur-lg rounded-3xl flex items-center justify-center mb-6 mx-auto shadow-2xl">
+            <div className="w-32 h-32 bg-card/20 backdrop-blur-lg rounded-3xl flex items-center justify-center mb-6 mx-auto shadow-2xl">
               <span className="text-6xl">₹</span>
             </div>
             <h1 className="text-5xl font-bold mb-4 text-center">Loan Tracker</h1>
@@ -200,19 +200,19 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
           <div className="space-y-4 text-white/90">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+              <div className="w-12 h-12 bg-card/20 rounded-full flex items-center justify-center">
                 <span className="text-2xl">📊</span>
               </div>
               <p>Visualize your loan payments</p>
             </div>
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+              <div className="w-12 h-12 bg-card/20 rounded-full flex items-center justify-center">
                 <span className="text-2xl">💰</span>
               </div>
               <p>Track monthly expenses</p>
             </div>
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+              <div className="w-12 h-12 bg-card/20 rounded-full flex items-center justify-center">
                 <span className="text-2xl">🎯</span>
               </div>
               <p>Plan your debt-free journey</p>
@@ -221,18 +221,18 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         </div>
 
         {/* Right Side - Login Form */}
-        <div className="bg-white rounded-3xl shadow-2xl p-8 lg:p-12">
+        <div className="bg-card rounded-3xl shadow-2xl p-8 lg:p-12">
           <div className="mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">
+            <h2 className="text-3xl font-bold text-foreground mb-2">
               {mode === 'login' ? 'Welcome Back!' : mode === 'register' ? 'Create Account' : 'Phone Login'}
             </h2>
-            <p className="text-gray-600">
+            <p className="text-muted-foreground">
               {mode === 'login' ? 'Sign in to continue' : mode === 'register' ? 'Sign up to get started' : 'Login with OTP'}
             </p>
           </div>
 
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded">
+            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 text-red-700 rounded">
               {error}
             </div>
           )}
@@ -245,7 +245,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                 className={`flex-1 py-3 px-4 rounded-lg font-medium transition-colors ${
                   authMethod === 'password' && mode === 'login'
                     ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    : 'bg-gray-100 text-muted-foreground hover:bg-gray-200'
                 }`}
               >
                 Password
@@ -255,7 +255,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                 className={`flex-1 py-3 px-4 rounded-lg font-medium transition-colors ${
                   authMethod === 'otp' && mode === 'otp'
                     ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    : 'bg-gray-100 text-muted-foreground hover:bg-gray-200'
                 }`}
               >
                 📱 OTP
@@ -267,7 +267,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
           {mode === 'login' && (
             <form onSubmit={handleLogin} className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Username</label>
                 <input
                   type="text"
                   value={formData.username}
@@ -279,7 +279,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Password</label>
                 <input
                   type="password"
                   value={formData.password}
@@ -305,7 +305,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             <form onSubmit={handleRegister} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Username*</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Username*</label>
                   <input
                     type="text"
                     value={formData.username}
@@ -315,7 +315,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Full Name*</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Full Name*</label>
                   <input
                     type="text"
                     value={formData.user_name}
@@ -327,7 +327,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
                 <input
                   type="email"
                   value={formData.email}
@@ -337,7 +337,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Phone</label>
                 <input
                   type="tel"
                   value={formData.phone}
@@ -348,7 +348,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Password*</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Password*</label>
                 <input
                   type="password"
                   value={formData.password}
@@ -360,7 +360,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Monthly Salary*</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Monthly Salary*</label>
                   <input
                     type="number"
                     value={formData.monthly_salary}
@@ -370,7 +370,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Other Income</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Other Income</label>
                   <input
                     type="number"
                     value={formData.other_income}
@@ -396,7 +396,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
               {!otpSent ? (
                 <form onSubmit={handleRequestOTP}>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Phone Number</label>
                     <input
                       type="tel"
                       value={formData.phone}
@@ -418,7 +418,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
               ) : (
                 <form onSubmit={handleVerifyOTP} className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Enter OTP</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Enter OTP</label>
                     <input
                       type="text"
                       value={formData.otp}
@@ -431,7 +431,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Your Name</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Your Name</label>
                     <input
                       type="text"
                       value={formData.user_name}
@@ -441,7 +441,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Monthly Salary (Optional)</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Monthly Salary (Optional)</label>
                     <input
                       type="number"
                       value={formData.monthly_salary}
@@ -477,7 +477,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                 <div className="w-full border-t border-gray-300"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                <span className="px-2 bg-card text-muted-foreground">Or continue with</span>
               </div>
             </div>
 
@@ -485,7 +485,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             <div className="mt-4 flex justify-center">
               <div id="googleSignInButton"></div>
             </div>
-            <p className="mt-2 text-xs text-gray-500 text-center">
+            <p className="mt-2 text-xs text-muted-foreground text-center">
               Secure sign-in with your Google account
             </p>
           </div>
@@ -493,7 +493,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
           {/* Toggle Login/Register */}
           <div className="mt-6 text-center text-sm">
             {mode === 'register' ? (
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 Already have an account?{' '}
                 <button
                   onClick={() => setMode('login')}
@@ -503,7 +503,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                 </button>
               </p>
             ) : (
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 Don't have an account?{' '}
                 <button
                   onClick={() => setMode('register')}

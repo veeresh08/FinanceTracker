@@ -249,7 +249,7 @@ const EnhancedMonthlyTracker: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Month & Year */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Month</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Month</label>
                   <select
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg"
                     value={formData.month}
@@ -263,7 +263,7 @@ const EnhancedMonthlyTracker: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Year</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Year</label>
                   <input
                     type="number"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg"
@@ -273,7 +273,7 @@ const EnhancedMonthlyTracker: React.FC = () => {
                   />
                 </div>
 
-                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200">
                   <p className="text-xs text-gray-600 mb-1">Total Income</p>
                   <p className="text-xl font-bold text-blue-600">
                     {currencySymbol} {((formData.salary || 0) + (formData.other_income || 0)).toLocaleString()}
@@ -286,7 +286,7 @@ const EnhancedMonthlyTracker: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Salary</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Salary</label>
                   <input
                     type="number"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg"
@@ -298,7 +298,7 @@ const EnhancedMonthlyTracker: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Other Income</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Other Income</label>
                   <input
                     type="number"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg"
@@ -314,7 +314,7 @@ const EnhancedMonthlyTracker: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">🏠 Rent</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">🏠 Rent</label>
                   <input
                     type="number"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg"
@@ -324,7 +324,7 @@ const EnhancedMonthlyTracker: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">🍔 Food</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">🍔 Food</label>
                   <input
                     type="number"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg"
@@ -334,7 +334,7 @@ const EnhancedMonthlyTracker: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">🚗 Transport</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">🚗 Transport</label>
                   <input
                     type="number"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg"
@@ -344,7 +344,7 @@ const EnhancedMonthlyTracker: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">💡 Utilities</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">💡 Utilities</label>
                   <input
                     type="number"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg"
@@ -354,7 +354,7 @@ const EnhancedMonthlyTracker: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">🎬 Entertainment</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">🎬 Entertainment</label>
                   <input
                     type="number"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg"
@@ -364,7 +364,7 @@ const EnhancedMonthlyTracker: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">💳 Credit Card</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">💳 Credit Card</label>
                   <input
                     type="number"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg"
@@ -380,7 +380,7 @@ const EnhancedMonthlyTracker: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">📈 Investments</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">📈 Investments</label>
                   <input
                     type="number"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg"
@@ -391,7 +391,7 @@ const EnhancedMonthlyTracker: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">🛡️ Emergency Fund</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">🛡️ Emergency Fund</label>
                   <input
                     type="number"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg"
@@ -402,7 +402,7 @@ const EnhancedMonthlyTracker: React.FC = () => {
                 </div>
 
                 <div className="md:col-span-3">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Notes</label>
                   <textarea
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg"
                     rows={2}
@@ -419,7 +419,7 @@ const EnhancedMonthlyTracker: React.FC = () => {
                 <button 
                   type="button" 
                   onClick={() => { setShowAddForm(false); resetForm(); }}
-                  className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200"
+                  className="px-6 py-2 bg-gray-100 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-200"
                 >
                   Cancel
                 </button>
@@ -565,13 +565,13 @@ const EnhancedMonthlyTracker: React.FC = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <button
                           onClick={() => handleEdit(record)}
-                          className="text-blue-600 hover:text-blue-800 font-medium mr-3"
+                          className="text-blue-600 hover:text-blue-800 dark:text-blue-300 font-medium mr-3"
                         >
                           ✏️ Edit
                         </button>
                         <button
                           onClick={() => handleDelete(record.id, record.month, record.year)}
-                          className="text-red-600 hover:text-red-800 font-medium"
+                          className="text-red-600 hover:text-red-800 dark:text-red-300 font-medium"
                         >
                           🗑️ Delete
                         </button>

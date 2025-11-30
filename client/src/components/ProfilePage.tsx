@@ -35,10 +35,10 @@ const ProfilePage: React.FC = () => {
 
   if (loadingProfile) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading profile...</p>
+          <p className="mt-4 text-muted-foreground">Loading profile...</p>
         </div>
       </div>
     );
@@ -46,9 +46,9 @@ const ProfilePage: React.FC = () => {
 
   if (!profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <p className="text-xl text-gray-600">No profile found</p>
+          <p className="text-xl text-muted-foreground">No profile found</p>
         </div>
       </div>
     );
@@ -57,24 +57,24 @@ const ProfilePage: React.FC = () => {
   const currencySymbol = profile.currency === 'INR' ? '₹' : profile.currency === 'EUR' ? '€' : profile.currency === 'GBP' ? '£' : '$';
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-background py-8">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header with User Selector */}
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Profile Settings</h1>
-            <p className="mt-1 text-sm text-gray-500">Manage your account information and preferences</p>
+            <h1 className="text-3xl font-bold text-foreground">Profile Settings</h1>
+            <p className="mt-1 text-sm text-muted-foreground">Manage your account information and preferences</p>
           </div>
           {/* Removed user selector for security - each user can only see their own profile */}
         </div>
 
         {/* Incomplete Profile Warning */}
         {profile && (!profile.monthly_salary || !(profile as any).email || !(profile as any).phone) && (
-          <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <div className="mb-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 rounded-lg p-4">
             <div className="flex items-start">
               <span className="text-2xl mr-3">⚠️</span>
               <div>
-                <h3 className="text-sm font-semibold text-yellow-800 mb-1">Complete Your Profile</h3>
+                <h3 className="text-sm font-semibold text-yellow-800 dark:text-yellow-300 mb-1">Complete Your Profile</h3>
                 <p className="text-sm text-yellow-700">
                   Some information is missing. Please update your profile to use all features of the app.
                   {!profile.monthly_salary && ' Monthly salary is required for loan calculations.'}
@@ -83,7 +83,7 @@ const ProfilePage: React.FC = () => {
                 </p>
                 <button
                   onClick={() => setEditing(true)}
-                  className="mt-2 text-sm font-medium text-yellow-800 underline hover:text-yellow-900"
+                  className="mt-2 text-sm font-medium text-yellow-800 dark:text-yellow-300 underline hover:text-yellow-900"
                 >
                   Update Profile Now →
                 </button>
@@ -93,9 +93,9 @@ const ProfilePage: React.FC = () => {
         )}
 
         {/* Profile Card */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="bg-card rounded-lg shadow-sm border border-border">
           {/* Profile Header */}
-          <div className="px-6 py-5 border-b border-gray-200">
+          <div className="px-6 py-5 border-b border-border">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
@@ -104,8 +104,8 @@ const ProfilePage: React.FC = () => {
                   </span>
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900">{profile.user_name || 'No Name'}</h2>
-                  <p className="text-sm text-gray-500">Member since {new Date((profile as any).created_at || Date.now()).toLocaleDateString()}</p>
+                  <h2 className="text-xl font-semibold text-foreground">{profile.user_name || 'No Name'}</h2>
+                  <p className="text-sm text-muted-foreground">Member since {new Date((profile as any).created_at || Date.now()).toLocaleDateString()}</p>
                 </div>
               </div>
               {!editing && (
@@ -123,11 +123,11 @@ const ProfilePage: React.FC = () => {
           <div className="px-6 py-6">
             {editing ? (
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-6">Edit Information</h3>
+                <h3 className="text-lg font-semibold text-foreground mb-6">Edit Information</h3>
                 <div className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Full Name *
                       </label>
                       <input
@@ -140,7 +140,7 @@ const ProfilePage: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Email
                       </label>
                       <input
@@ -150,11 +150,11 @@ const ProfilePage: React.FC = () => {
                         value={(editedProfile as any).email || ''}
                         onChange={(e) => setEditedProfile({ ...editedProfile, email: e.target.value } as any)}
                       />
-                      <p className="mt-1 text-xs text-gray-500">Used for notifications and account recovery</p>
+                      <p className="mt-1 text-xs text-muted-foreground">Used for notifications and account recovery</p>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Phone Number
                       </label>
                       <input
@@ -164,11 +164,11 @@ const ProfilePage: React.FC = () => {
                         value={(editedProfile as any).phone || ''}
                         onChange={(e) => setEditedProfile({ ...editedProfile, phone: e.target.value } as any)}
                       />
-                      <p className="mt-1 text-xs text-gray-500">For OTP login and SMS alerts</p>
+                      <p className="mt-1 text-xs text-muted-foreground">For OTP login and SMS alerts</p>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Currency
                       </label>
                       <select
@@ -184,7 +184,7 @@ const ProfilePage: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Monthly Salary ({currencySymbol}) *
                       </label>
                       <input
@@ -197,7 +197,7 @@ const ProfilePage: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Other Monthly Income ({currencySymbol})
                       </label>
                       <input
@@ -222,7 +222,7 @@ const ProfilePage: React.FC = () => {
                         setEditing(false);
                         setEditedProfile(profile);
                       }}
-                      className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200"
+                      className="px-6 py-2 bg-gray-100 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-200"
                     >
                       Cancel
                     </button>
@@ -231,31 +231,31 @@ const ProfilePage: React.FC = () => {
               </div>
             ) : (
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-6">Personal Information</h3>
+                <h3 className="text-lg font-semibold text-foreground mb-6">Personal Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <p className="text-sm text-gray-500 mb-1">Full Name</p>
-                    <p className="text-base font-medium text-gray-900">{profile.user_name || 'Not set'}</p>
+                    <p className="text-sm text-muted-foreground mb-1">Full Name</p>
+                    <p className="text-base font-medium text-foreground">{profile.user_name || 'Not set'}</p>
                   </div>
 
                   <div>
-                    <p className="text-sm text-gray-500 mb-1">Username</p>
-                    <p className="text-base font-medium text-gray-900">{(profile as any).username || 'Not set'}</p>
+                    <p className="text-sm text-muted-foreground mb-1">Username</p>
+                    <p className="text-base font-medium text-foreground">{(profile as any).username || 'Not set'}</p>
                   </div>
 
                   <div>
-                    <p className="text-sm text-gray-500 mb-1">Email</p>
-                    <p className="text-base font-medium text-gray-900">{(profile as any).email || 'Not set'}</p>
+                    <p className="text-sm text-muted-foreground mb-1">Email</p>
+                    <p className="text-base font-medium text-foreground">{(profile as any).email || 'Not set'}</p>
                   </div>
 
                   <div>
-                    <p className="text-sm text-gray-500 mb-1">Phone Number</p>
-                    <p className="text-base font-medium text-gray-900">{(profile as any).phone || 'Not set'}</p>
+                    <p className="text-sm text-muted-foreground mb-1">Phone Number</p>
+                    <p className="text-base font-medium text-foreground">{(profile as any).phone || 'Not set'}</p>
                   </div>
 
                   <div>
-                    <p className="text-sm text-gray-500 mb-1">Login Method</p>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    <p className="text-sm text-muted-foreground mb-1">Login Method</p>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:text-blue-300">
                       {(profile as any).auth_method === 'google' && '🔐 Google'}
                       {(profile as any).auth_method === 'password' && '🔑 Password'}
                       {(profile as any).auth_method === 'otp' && '📱 OTP'}
@@ -264,36 +264,36 @@ const ProfilePage: React.FC = () => {
                   </div>
 
                   <div>
-                    <p className="text-sm text-gray-500 mb-1">Preferred Currency</p>
-                    <p className="text-base font-medium text-gray-900">
+                    <p className="text-sm text-muted-foreground mb-1">Preferred Currency</p>
+                    <p className="text-base font-medium text-foreground">
                       {currencySymbol} {profile.currency}
                     </p>
                   </div>
 
                   <div>
-                    <p className="text-sm text-gray-500 mb-1">Monthly Salary</p>
-                    <p className="text-base font-medium text-gray-900">
+                    <p className="text-sm text-muted-foreground mb-1">Monthly Salary</p>
+                    <p className="text-base font-medium text-foreground">
                       {currencySymbol} {profile.monthly_salary?.toLocaleString()}
                     </p>
                   </div>
 
                   <div>
-                    <p className="text-sm text-gray-500 mb-1">Other Monthly Income</p>
-                    <p className="text-base font-medium text-gray-900">
+                    <p className="text-sm text-muted-foreground mb-1">Other Monthly Income</p>
+                    <p className="text-base font-medium text-foreground">
                       {currencySymbol} {(profile.other_income || 0).toLocaleString()}
                     </p>
                   </div>
 
                   <div>
-                    <p className="text-sm text-gray-500 mb-1">Total Monthly Income</p>
+                    <p className="text-sm text-muted-foreground mb-1">Total Monthly Income</p>
                     <p className="text-base font-semibold text-green-600">
                       {currencySymbol} {((profile.monthly_salary || 0) + (profile.other_income || 0)).toLocaleString()}
                     </p>
                   </div>
 
                   <div>
-                    <p className="text-sm text-gray-500 mb-1">Account Status</p>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    <p className="text-sm text-muted-foreground mb-1">Account Status</p>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:text-green-300">
                       Active
                     </span>
                   </div>
@@ -306,21 +306,21 @@ const ProfilePage: React.FC = () => {
         {/* Statistics Cards */}
         {!editing && (
           <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-              <p className="text-sm text-gray-500">Account Age</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">
+            <div className="bg-card rounded-lg shadow-sm border border-border p-4">
+              <p className="text-sm text-muted-foreground">Account Age</p>
+              <p className="text-2xl font-bold text-foreground mt-1">
                 {Math.floor((Date.now() - new Date((profile as any).created_at || Date.now()).getTime()) / (1000 * 60 * 60 * 24))} days
               </p>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-              <p className="text-sm text-gray-500">Currency</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{profile.currency}</p>
+            <div className="bg-card rounded-lg shadow-sm border border-border p-4">
+              <p className="text-sm text-muted-foreground">Currency</p>
+              <p className="text-2xl font-bold text-foreground mt-1">{profile.currency}</p>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-              <p className="text-sm text-gray-500">Last Updated</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">
+            <div className="bg-card rounded-lg shadow-sm border border-border p-4">
+              <p className="text-sm text-muted-foreground">Last Updated</p>
+              <p className="text-2xl font-bold text-foreground mt-1">
                 {(profile as any).updated_at ? new Date((profile as any).updated_at).toLocaleDateString() : 'Never'}
               </p>
             </div>

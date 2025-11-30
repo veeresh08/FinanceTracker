@@ -134,11 +134,11 @@ const Dashboard: React.FC = () => {
                     key={index}
                     className={`card border-l-4 ${
                       rec.type === 'warning'
-                        ? 'border-yellow-500 bg-yellow-50'
-                        : 'border-green-500 bg-green-50'
+                        ? 'border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20'
+                        : 'border-green-500 bg-green-50 dark:bg-green-900/20'
                     }`}
                   >
-                    <p className={rec.type === 'warning' ? 'text-yellow-800' : 'text-green-800'}>
+                    <p className={rec.type === 'warning' ? 'text-yellow-800 dark:text-yellow-300' : 'text-green-800 dark:text-green-300'}>
                       {rec.message}
                     </p>
                   </div>
@@ -292,12 +292,12 @@ const Dashboard: React.FC = () => {
                 <table className="w-full">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Loan Name</th>
-                      <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Principal</th>
-                      <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Interest</th>
-                      <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Monthly Payment</th>
-                      <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Tenure</th>
-                      <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Action</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Loan Name</th>
+                      <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-300">Principal</th>
+                      <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-300">Interest</th>
+                      <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-300">Monthly Payment</th>
+                      <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-300">Tenure</th>
+                      <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">

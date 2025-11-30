@@ -84,12 +84,12 @@ const SetupForm: React.FC<SetupFormProps> = ({ onComplete }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full p-8">
+      <div className="bg-card rounded-2xl shadow-2xl max-w-3xl w-full p-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+          <h1 className="text-3xl font-bold text-foreground mb-2">
             Welcome to Loan Tracker 💰
           </h1>
-          <p className="text-gray-600">Let's set up your financial profile</p>
+          <p className="text-muted-foreground">Let's set up your financial profile</p>
         </div>
 
         {/* Progress Steps */}
@@ -99,7 +99,7 @@ const SetupForm: React.FC<SetupFormProps> = ({ onComplete }) => {
             1
           </div>
           <div className={`flex-1 h-2 rounded ${step >= 2 ? 'bg-primary-600' : 'bg-gray-200'}`} />
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center mx-2 ${step >= 2 ? 'bg-primary-600 text-white' : 'bg-gray-200 text-gray-600'} font-bold`}>
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center mx-2 ${step >= 2 ? 'bg-primary-600 text-white' : 'bg-gray-200 text-muted-foreground'} font-bold`}>
             2
           </div>
           <div className={`flex-1 h-2 rounded bg-gray-200`} />
@@ -107,7 +107,7 @@ const SetupForm: React.FC<SetupFormProps> = ({ onComplete }) => {
 
         {step === 1 && (
           <form onSubmit={handleProfileSubmit} className="space-y-6">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">Your Information</h2>
+            <h2 className="text-2xl font-semibold text-foreground mb-4">Your Information</h2>
             
             <div>
               <label className="label">Your Name *</label>
@@ -160,7 +160,7 @@ const SetupForm: React.FC<SetupFormProps> = ({ onComplete }) => {
 
             {profile.monthly_salary && (
               <div className="bg-primary-50 p-4 rounded-lg">
-                <p className="text-sm text-gray-600">Total Monthly Income</p>
+                <p className="text-sm text-muted-foreground">Total Monthly Income</p>
                 <p className="text-2xl font-bold text-primary-700">
                   {profile.currency === 'INR' ? '₹' : '$'}{(parseFloat(profile.monthly_salary) + parseFloat(profile.other_income || '0')).toLocaleString('en-IN', {maximumFractionDigits: 0})}
                 </p>
@@ -175,7 +175,7 @@ const SetupForm: React.FC<SetupFormProps> = ({ onComplete }) => {
 
         {step === 2 && (
           <div className="space-y-6">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">Add Your Loans</h2>
+            <h2 className="text-2xl font-semibold text-foreground mb-4">Add Your Loans</h2>
             
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -264,16 +264,16 @@ const SetupForm: React.FC<SetupFormProps> = ({ onComplete }) => {
                 <h3 className="text-lg font-semibold mb-3">Added Loans ({loans.length})</h3>
                 <div className="space-y-2">
                   {loans.map((loan, index) => (
-                    <div key={index} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                    <div key={index} className="flex justify-between items-center bg-background p-3 rounded-lg">
                       <div>
                         <p className="font-medium">{loan.loan_name}</p>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-muted-foreground">
                           {profile.currency === 'INR' ? '₹' : '$'}{parseFloat(loan.principal_amount).toLocaleString('en-IN', {maximumFractionDigits: 0})} @ {loan.interest_rate}% for {loan.loan_term_months} months
                         </p>
                       </div>
                       <button
                         onClick={() => removeLoan(index)}
-                        className="text-red-600 hover:text-red-800 font-medium"
+                        className="text-red-600 hover:text-red-800 dark:text-red-300 font-medium"
                       >
                         Remove
                       </button>
@@ -300,7 +300,7 @@ const SetupForm: React.FC<SetupFormProps> = ({ onComplete }) => {
             </div>
 
             {loans.length === 0 && (
-              <p className="text-center text-sm text-gray-500">
+              <p className="text-center text-sm text-muted-foreground">
                 You can also skip and add loans later
               </p>
             )}

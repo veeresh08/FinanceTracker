@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import Navbar from './components/Navbar';
 import Home from './components/Home';
-// import ImprovedDashboard from './components/ImprovedDashboard';
-import ModernDashboard from './components/ModernDashboard';
+import ImprovedDashboard from './components/ImprovedDashboard';
 import LoansPage from './components/LoansPage';
 import InvestmentsPage from './components/InvestmentsPage';
 import ImprovedMonthlyTracker from './components/ImprovedMonthlyTracker';
@@ -100,7 +99,7 @@ function AppContent() {
       case 'home':
         return <Home />;
       case 'dashboard':
-        return <ModernDashboard />;
+        return <ImprovedDashboard />;
       case 'loans':
         return <LoansPage />;
       case 'investments':
@@ -130,11 +129,15 @@ function AppContent() {
   );
 }
 
+import { ThemeProvider } from './ThemeContext';
+
 function App() {
   return (
-    <UserProvider>
-      <AppContent />
-    </UserProvider>
+    <ThemeProvider>
+      <UserProvider>
+        <AppContent />
+      </UserProvider>
+    </ThemeProvider>
   );
 }
 
