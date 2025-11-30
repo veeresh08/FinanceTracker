@@ -12,18 +12,19 @@ interface NavbarProps {
 const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate, onLogout, isAdmin }) => {
   const { currentUser } = useUser();
   
-  const navItems = [
-    { id: 'home' as const, label: 'Home', icon: '🏠' },
-    { id: 'dashboard' as const, label: 'Dashboard', icon: '📊' },
-    { id: 'loans' as const, label: 'Loans', icon: '💰' },
-    { id: 'investments' as const, label: 'Investments', icon: '📈' },
-    { id: 'monthly' as const, label: 'Monthly Tracker', icon: '📅' },
-    { id: 'profile' as const, label: 'Profile', icon: '👤' },
+  // Build nav items dynamically based on admin status
+  const navItems: Array<{ id: 'home' | 'dashboard' | 'loans' | 'investments' | 'monthly' | 'profile' | 'admin', label: string, icon: string }> = [
+    { id: 'home', label: 'Home', icon: '🏠' },
+    { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+    { id: 'loans', label: 'Loans', icon: '💰' },
+    { id: 'investments', label: 'Investments', icon: '📈' },
+    { id: 'monthly', label: 'Monthly Tracker', icon: '📅' },
+    { id: 'profile', label: 'Profile', icon: '👤' },
   ];
 
   // Add admin item if user is admin
   if (isAdmin) {
-    navItems.push({ id: 'admin' as const, label: 'Admin', icon: '🔐' });
+    navItems.push({ id: 'admin', label: 'Admin', icon: '🔐' });
   }
 
   // Removed user switching for security - each authenticated user sees only their own data
