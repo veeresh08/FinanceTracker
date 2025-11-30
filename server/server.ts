@@ -27,7 +27,7 @@ const PORT = 3001;
 // Use DATABASE_PATH env var if set (for Cloud Run), otherwise use local path
 const DB_FILE = process.env.DATABASE_PATH || path.join(process.cwd(), 'loan-tracker.db');
 const GCS_BUCKET = 'wealthflow-db-veeresh-2024';
-const GCS_DB_PATH = 'database/loan-tracker.db';
+const GCS_DB_PATH = 'database/loan-tracker-v2.db'; // Updated path to avoid GCS caching
 
 console.log(`📊 Database path: ${DB_FILE}`);
 
