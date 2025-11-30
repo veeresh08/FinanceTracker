@@ -267,11 +267,11 @@ function getUserDataSummary(auth_user_id: number) {
     // Count monthly records
     const recordCount = db.prepare('SELECT COUNT(*) as count FROM monthly_records WHERE user_id = ?').get(auth_user_id);
     
-    // Get total loan amount
-    const totalLoans = db.prepare('SELECT SUM(principal_amount) as total FROM loans WHERE user_id = ? AND status = "active"').get(auth_user_id);
+    // Get total loan amount (all loans, not just active)
+    const totalLoans = db.prepare('SELECT SUM(principal_amount) as total FROM loans WHERE user_id = ?').get(auth_user_id);
     
-    // Get total investment value
-    const totalInvestments = db.prepare('SELECT SUM(current_value) as total FROM investments WHERE user_id = ? AND status = "active"').get(auth_user_id);
+    // Get total investment value (all investments)
+    const totalInvestments = db.prepare('SELECT SUM(current_value) as total FROM investments WHERE user_id = ?').get(auth_user_id);
     
     return {
       loans: loanCount?.count || 0,
@@ -282,7 +282,13 @@ function getUserDataSummary(auth_user_id: number) {
     };
   } catch (error) {
     console.error('Error getting user data summary:', error);
-    return null;
+    return {
+      loans: 0,
+      investments: 0,
+      monthly_records: 0,
+      total_loan_amount: 0,
+      total_investment_value: 0
+    };
   }
 }
 
@@ -1143,22 +1149,22 @@ app.get('/api/admin/statistics', requireAdmin, (req, res) => {
     const totalUsers = db.prepare('SELECT COUNT(*) as count FROM auth_users').get();
     
     // Active users (logged in within last 30 days)
-    const activeUsers = db.prepare('SELECT COUNT(*) as count FROM auth_users WHERE last_login >= datetime("now", "-30 days")').get();
+    const activeUsers = db.prepare('SELECT COUNT(*) as count FROM auth_users WHERE last_login >= datetime(\'now\', \'-30 days\')').get();
     
     // New users (registered within last 7 days)
-    const newUsers = db.prepare('SELECT COUNT(*) as count FROM auth_users WHERE created_at >= datetime("now", "-7 days")').get();
+    const newUsers = db.prepare('SELECT COUNT(*) as count FROM auth_users WHERE created_at >= datetime(\'now\', \'-7 days\')').get();
     
-    // Total loans
-    const totalLoans = db.prepare('SELECT COUNT(*) as count, SUM(principal_amount) as total_amount FROM loans WHERE status = "active"').get();
+    // Total loans (all loans)
+    const totalLoans = db.prepare('SELECT COUNT(*) as count, SUM(principal_amount) as total_amount FROM loans').get();
     
-    // Total investments
-    const totalInvestments = db.prepare('SELECT COUNT(*) as count, SUM(current_value) as total_value FROM investments WHERE status = "active"').get();
+    // Total investments (all investments)
+    const totalInvestments = db.prepare('SELECT COUNT(*) as count, SUM(current_value) as total_value FROM investments').get();
     
     // Activity by action type (last 30 days)
     const activityByType = db.prepare(`
       SELECT action_type, COUNT(*) as count 
       FROM activity_logs 
-      WHERE created_at >= datetime("now", "-30 days")
+      WHERE created_at >= datetime(\'now\', \'-30 days\')
       GROUP BY action_type
       ORDER BY count DESC
     `).all();
@@ -1169,7 +1175,7 @@ app.get('/api/admin/statistics', requireAdmin, (req, res) => {
         DATE(created_at) as date,
         COUNT(DISTINCT user_id) as active_users
       FROM activity_logs
-      WHERE created_at >= datetime("now", "-7 days")
+      WHERE created_at >= datetime(\'now\', \'-7 days\')
       GROUP BY DATE(created_at)
       ORDER BY date DESC
     `).all();
@@ -1183,7 +1189,7 @@ app.get('/api/admin/statistics', requireAdmin, (req, res) => {
         COUNT(*) as activity_count
       FROM activity_logs al
       LEFT JOIN auth_users au ON al.user_id = au.id
-      WHERE al.created_at >= datetime("now", "-30 days")
+      WHERE al.created_at >= datetime(\'now\', \'-30 days\')
       GROUP BY al.user_id
       ORDER BY activity_count DESC
       LIMIT 10

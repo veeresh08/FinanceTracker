@@ -57,6 +57,13 @@ function AppContent() {
     if (user.profile) {
       setCurrentUser(user.profile);
     }
+    
+    // If user is admin, redirect to admin dashboard
+    if (user.is_admin) {
+      setCurrentPage('admin');
+    } else {
+      setCurrentPage('dashboard');
+    }
   };
 
   const handleLogout = async () => {
