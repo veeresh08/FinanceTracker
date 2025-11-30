@@ -7,9 +7,9 @@ steps:
     args:
       - 'build'
       - '-t'
-      - 'us-central1-docker.pkg.dev/horizontal-data-435605-b9/wealthflow-repo/wealthflow:$SHORT_SHA'
+      - 'us-central1-docker.pkg.dev/horizontal-data-435605-b9/cloud-run-source-deploy/wealthflow:$SHORT_SHA'
       - '-t'
-      - 'us-central1-docker.pkg.dev/horizontal-data-435605-b9/wealthflow-repo/wealthflow:latest'
+      - 'us-central1-docker.pkg.dev/horizontal-data-435605-b9/cloud-run-source-deploy/wealthflow:latest'
       - '.'
     id: 'build-docker-image'
 
@@ -18,7 +18,7 @@ steps:
     args:
       - 'push'
       - '--all-tags'
-      - 'us-central1-docker.pkg.dev/horizontal-data-435605-b9/wealthflow-repo/wealthflow'
+      - 'us-central1-docker.pkg.dev/horizontal-data-435605-b9/cloud-run-source-deploy/wealthflow'
     id: 'push-docker-image'
 
   # Step 3: Deploy to Cloud Run
@@ -27,7 +27,7 @@ steps:
       - 'run'
       - 'deploy'
       - 'wealthflow'
-      - '--image=us-central1-docker.pkg.dev/horizontal-data-435605-b9/wealthflow-repo/wealthflow:$SHORT_SHA'
+      - '--image=us-central1-docker.pkg.dev/horizontal-data-435605-b9/cloud-run-source-deploy/wealthflow:$SHORT_SHA'
       - '--region=us-central1'
       - '--platform=managed'
       - '--allow-unauthenticated'
@@ -40,8 +40,8 @@ steps:
 
 # Store the images in Artifact Registry
 images:
-  - 'us-central1-docker.pkg.dev/horizontal-data-435605-b9/wealthflow-repo/wealthflow:$SHORT_SHA'
-  - 'us-central1-docker.pkg.dev/horizontal-data-435605-b9/wealthflow-repo/wealthflow:latest'
+  - 'us-central1-docker.pkg.dev/horizontal-data-435605-b9/cloud-run-source-deploy/wealthflow:$SHORT_SHA'
+  - 'us-central1-docker.pkg.dev/horizontal-data-435605-b9/cloud-run-source-deploy/wealthflow:latest'
 
 # Build options
 options:
