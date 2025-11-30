@@ -25,7 +25,7 @@ const PORT = 3001;
 // DATABASE PERSISTENCE (Google Cloud Storage)
 // ============================================
 const DB_FILE = path.join(process.cwd(), 'loan-tracker.db');
-const GCS_BUCKET = 'wealthflow-db-backup';
+const GCS_BUCKET = 'wealthflow-db-veeresh-2024';
 const GCS_DB_PATH = 'database/loan-tracker.db';
 
 // Initialize GCS only in production (Cloud Run)
