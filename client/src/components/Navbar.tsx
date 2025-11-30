@@ -2,13 +2,14 @@ import React from 'react';
 import { useUser } from '../UserContext';
 
 interface NavbarProps {
-  currentPage: 'home' | 'dashboard' | 'loans' | 'investments' | 'monthly' | 'profile';
-  onNavigate: (page: 'home' | 'dashboard' | 'loans' | 'investments' | 'monthly' | 'profile') => void;
+  currentPage: 'home' | 'dashboard' | 'loans' | 'investments' | 'monthly' | 'profile' | 'admin';
+  onNavigate: (page: 'home' | 'dashboard' | 'loans' | 'investments' | 'monthly' | 'profile' | 'admin') => void;
   userName?: string;
+  isAdmin?: boolean;
   onLogout?: () => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate, onLogout }) => {
+const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate, onLogout, isAdmin }) => {
   const { currentUser } = useUser();
   
   const navItems = [
@@ -19,6 +20,11 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate, onLogout }) =>
     { id: 'monthly' as const, label: 'Monthly Tracker', icon: '📅' },
     { id: 'profile' as const, label: 'Profile', icon: '👤' },
   ];
+
+  // Add admin item if user is admin
+  if (isAdmin) {
+    navItems.push({ id: 'admin' as const, label: 'Admin', icon: '🔐' });
+  }
 
   // Removed user switching for security - each authenticated user sees only their own data
 

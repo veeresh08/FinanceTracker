@@ -232,6 +232,61 @@ function clearOTP(auth_user_id: number) {
 }
 
 // ============================================
+// ADMIN & ACTIVITY TRACKING
+// ============================================
+function logActivity(user_id: number | null, action_type: string, action_description: string, ip_address?: string, user_agent?: string) {
+  try {
+    const stmt = db.prepare(`
+      INSERT INTO activity_logs (user_id, action_type, action_description, ip_address, user_agent)
+      VALUES (?, ?, ?, ?, ?)
+    `);
+    stmt.run(user_id, action_type, action_description, ip_address, user_agent);
+  } catch (error) {
+    console.error('Activity logging error:', error);
+  }
+}
+
+function isAdmin(auth_user_id: number): boolean {
+  try {
+    const stmt = db.prepare('SELECT is_admin FROM auth_users WHERE id = ?');
+    const user: any = stmt.get(auth_user_id);
+    return user && user.is_admin === 1;
+  } catch (error) {
+    return false;
+  }
+}
+
+function getUserDataSummary(auth_user_id: number) {
+  try {
+    // Count user's loans
+    const loanCount = db.prepare('SELECT COUNT(*) as count FROM loans WHERE user_id = ?').get(auth_user_id);
+    
+    // Count user's investments
+    const investmentCount = db.prepare('SELECT COUNT(*) as count FROM investments WHERE user_id = ?').get(auth_user_id);
+    
+    // Count monthly records
+    const recordCount = db.prepare('SELECT COUNT(*) as count FROM monthly_records WHERE user_id = ?').get(auth_user_id);
+    
+    // Get total loan amount
+    const totalLoans = db.prepare('SELECT SUM(principal_amount) as total FROM loans WHERE user_id = ? AND status = "active"').get(auth_user_id);
+    
+    // Get total investment value
+    const totalInvestments = db.prepare('SELECT SUM(current_value) as total FROM investments WHERE user_id = ? AND status = "active"').get(auth_user_id);
+    
+    return {
+      loans: loanCount?.count || 0,
+      investments: investmentCount?.count || 0,
+      monthly_records: recordCount?.count || 0,
+      total_loan_amount: totalLoans?.total || 0,
+      total_investment_value: totalInvestments?.total || 0
+    };
+  } catch (error) {
+    console.error('Error getting user data summary:', error);
+    return null;
+  }
+}
+
+// ============================================
 // DATABASE INITIALIZATION
 // ============================================
 function initializeDatabase() {
@@ -248,11 +303,30 @@ function initializeDatabase() {
       otp TEXT,
       otp_expires_at DATETIME,
       is_verified INTEGER DEFAULT 0,
+      is_admin INTEGER DEFAULT 0,
       last_login DATETIME,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  // Admin Activity Logs table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS activity_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER,
+      action_type TEXT NOT NULL,
+      action_description TEXT,
+      ip_address TEXT,
+      user_agent TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES auth_users(id)
+    )
+  `);
+
+  // Create index on activity_logs for faster queries
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_activity_user ON activity_logs(user_id)`);
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_activity_date ON activity_logs(created_at)`);
 
   // User Profile table
   db.exec(`
@@ -619,12 +693,14 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
     // Find user
     const authUser: any = findUserByUsername(username);
     if (!authUser) {
+      logActivity(null, 'login_failed', `Failed login attempt for username: ${username}`, req.ip, req.get('user-agent'));
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     // Verify password
     const isValid = await verifyPassword(password, authUser.password_hash);
     if (!isValid) {
+      logActivity(authUser.id, 'login_failed', 'Invalid password', req.ip, req.get('user-agent'));
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
@@ -638,6 +714,41 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
         other_income: 0
       });
     }
+
+    // Update last login
+    updateLastLogin(authUser.id);
+
+    // Log successful login
+    logActivity(authUser.id, 'login_success', 'User logged in successfully', req.ip, req.get('user-agent'));
+
+    // Store in session
+    req.session.userId = authUser.id;
+    req.session.save();
+
+    res.json({
+      success: true,
+      user: {
+        id: authUser.id,
+        username: authUser.username,
+        email: authUser.email,
+        phone: authUser.phone,
+        auth_method: authUser.auth_method,
+        is_admin: authUser.is_admin === 1
+      },
+      profile: {
+        id: profile.id,
+        user_name: profile.user_name,
+        currency: profile.currency,
+        monthly_salary: profile.monthly_salary,
+        other_income: profile.other_income,
+        total_income: profile.total_income
+      }
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(400).json({ error: error.message || 'Login failed' });
+  }
+});
 
     // Update last login
 updateLastLogin(authUser.id);
@@ -872,12 +983,289 @@ app.get('/api/auth/status', (req: Request, res: Response) => {
 
 // Logout
 app.post('/api/auth/logout', (req, res) => {
+  const userId = req.session.userId;
+  if (userId) {
+    logActivity(userId, 'logout', 'User logged out', req.ip, req.get('user-agent'));
+  }
   req.session.destroy((err) => {
     if (err) {
       return res.status(500).json({ error: 'Logout failed' });
     }
     res.json({ success: true, message: 'Logged out successfully' });
   });
+});
+
+// ============================================
+// ADMIN ROUTES (Protected)
+// ============================================
+
+// Middleware to check admin access
+function requireAdmin(req, res, next) {
+  if (!req.session.userId) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+  
+  if (!isAdmin(req.session.userId)) {
+    logActivity(req.session.userId, 'admin_access_denied', 'Attempted to access admin endpoint', req.ip, req.get('user-agent'));
+    return res.status(403).json({ error: 'Admin access required' });
+  }
+  
+  next();
+}
+
+// Get all users with their data summary (ADMIN ONLY)
+app.get('/api/admin/users', requireAdmin, (req, res) => {
+  try {
+    logActivity(req.session.userId, 'admin_view_users', 'Admin viewed all users', req.ip, req.get('user-agent'));
+    
+    const stmt = db.prepare(`
+      SELECT 
+        au.id,
+        au.username,
+        au.email,
+        au.phone,
+        au.auth_method,
+        au.is_admin,
+        au.is_verified,
+        au.last_login,
+        au.created_at,
+        up.user_name,
+        up.currency,
+        up.monthly_salary,
+        up.other_income,
+        up.total_income
+      FROM auth_users au
+      LEFT JOIN user_profile up ON au.id = up.auth_user_id
+      ORDER BY au.created_at DESC
+    `);
+    
+    const users = stmt.all();
+    
+    // Add data summary for each user
+    const usersWithData = users.map(user => {
+      const dataSummary = getUserDataSummary(user.id);
+      return {
+        ...user,
+        data_summary: dataSummary
+      };
+    });
+    
+    res.json({ users: usersWithData });
+  } catch (error) {
+    console.error('Admin users list error:', error);
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
+// Get specific user details (ADMIN ONLY)
+app.get('/api/admin/users/:userId', requireAdmin, (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    logActivity(req.session.userId, 'admin_view_user', `Admin viewed user ${userId}`, req.ip, req.get('user-agent'));
+    
+    // Get user basic info
+    const userStmt = db.prepare(`
+      SELECT 
+        au.*,
+        up.*
+      FROM auth_users au
+      LEFT JOIN user_profile up ON au.id = up.auth_user_id
+      WHERE au.id = ?
+    `);
+    const user = userStmt.get(userId);
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    // Get user's loans
+    const loansStmt = db.prepare('SELECT * FROM loans WHERE user_id = ? ORDER BY created_at DESC');
+    const loans = loansStmt.all(userId);
+    
+    // Get user's investments
+    const investmentsStmt = db.prepare('SELECT * FROM investments WHERE user_id = ? ORDER BY created_at DESC');
+    const investments = investmentsStmt.all(userId);
+    
+    // Get user's monthly records
+    const recordsStmt = db.prepare('SELECT * FROM monthly_records WHERE user_id = ? ORDER BY year DESC, month DESC LIMIT 12');
+    const monthly_records = recordsStmt.all(userId);
+    
+    // Get user's activity logs (last 50)
+    const activityStmt = db.prepare('SELECT * FROM activity_logs WHERE user_id = ? ORDER BY created_at DESC LIMIT 50');
+    const activity_logs = activityStmt.all(userId);
+    
+    res.json({
+      user,
+      loans,
+      investments,
+      monthly_records,
+      activity_logs,
+      data_summary: getUserDataSummary(parseInt(userId))
+    });
+  } catch (error) {
+    console.error('Admin user details error:', error);
+    res.status(500).json({ error: 'Failed to fetch user details' });
+  }
+});
+
+// Get all activity logs (ADMIN ONLY)
+app.get('/api/admin/activity-logs', requireAdmin, (req, res) => {
+  try {
+    const { limit = 100, user_id, action_type } = req.query;
+    
+    logActivity(req.session.userId, 'admin_view_logs', 'Admin viewed activity logs', req.ip, req.get('user-agent'));
+    
+    let query = `
+      SELECT 
+        al.*,
+        au.username,
+        au.email
+      FROM activity_logs al
+      LEFT JOIN auth_users au ON al.user_id = au.id
+      WHERE 1=1
+    `;
+    const params = [];
+    
+    if (user_id) {
+      query += ' AND al.user_id = ?';
+      params.push(user_id);
+    }
+    
+    if (action_type) {
+      query += ' AND al.action_type = ?';
+      params.push(action_type);
+    }
+    
+    query += ' ORDER BY al.created_at DESC LIMIT ?';
+    params.push(parseInt(limit as string));
+    
+    const stmt = db.prepare(query);
+    const logs = stmt.all(...params);
+    
+    res.json({ logs, total: logs.length });
+  } catch (error) {
+    console.error('Admin activity logs error:', error);
+    res.status(500).json({ error: 'Failed to fetch activity logs' });
+  }
+});
+
+// Get platform statistics (ADMIN ONLY)
+app.get('/api/admin/statistics', requireAdmin, (req, res) => {
+  try {
+    logActivity(req.session.userId, 'admin_view_stats', 'Admin viewed platform statistics', req.ip, req.get('user-agent'));
+    
+    // Total users
+    const totalUsers = db.prepare('SELECT COUNT(*) as count FROM auth_users').get();
+    
+    // Active users (logged in within last 30 days)
+    const activeUsers = db.prepare('SELECT COUNT(*) as count FROM auth_users WHERE last_login >= datetime("now", "-30 days")').get();
+    
+    // New users (registered within last 7 days)
+    const newUsers = db.prepare('SELECT COUNT(*) as count FROM auth_users WHERE created_at >= datetime("now", "-7 days")').get();
+    
+    // Total loans
+    const totalLoans = db.prepare('SELECT COUNT(*) as count, SUM(principal_amount) as total_amount FROM loans WHERE status = "active"').get();
+    
+    // Total investments
+    const totalInvestments = db.prepare('SELECT COUNT(*) as count, SUM(current_value) as total_value FROM investments WHERE status = "active"').get();
+    
+    // Activity by action type (last 30 days)
+    const activityByType = db.prepare(`
+      SELECT action_type, COUNT(*) as count 
+      FROM activity_logs 
+      WHERE created_at >= datetime("now", "-30 days")
+      GROUP BY action_type
+      ORDER BY count DESC
+    `).all();
+    
+    // Daily active users (last 7 days)
+    const dailyActiveUsers = db.prepare(`
+      SELECT 
+        DATE(created_at) as date,
+        COUNT(DISTINCT user_id) as active_users
+      FROM activity_logs
+      WHERE created_at >= datetime("now", "-7 days")
+      GROUP BY DATE(created_at)
+      ORDER BY date DESC
+    `).all();
+    
+    // Top users by activity
+    const topUsers = db.prepare(`
+      SELECT 
+        al.user_id,
+        au.username,
+        au.email,
+        COUNT(*) as activity_count
+      FROM activity_logs al
+      LEFT JOIN auth_users au ON al.user_id = au.id
+      WHERE al.created_at >= datetime("now", "-30 days")
+      GROUP BY al.user_id
+      ORDER BY activity_count DESC
+      LIMIT 10
+    `).all();
+    
+    res.json({
+      users: {
+        total: totalUsers.count,
+        active: activeUsers.count,
+        new: newUsers.count
+      },
+      loans: {
+        count: totalLoans.count,
+        total_amount: totalLoans.total_amount || 0
+      },
+      investments: {
+        count: totalInvestments.count,
+        total_value: totalInvestments.total_value || 0
+      },
+      activity_by_type: activityByType,
+      daily_active_users: dailyActiveUsers,
+      top_users: topUsers
+    });
+  } catch (error) {
+    console.error('Admin statistics error:', error);
+    res.status(500).json({ error: 'Failed to fetch statistics' });
+  }
+});
+
+// Make a user admin (ADMIN ONLY)
+app.post('/api/admin/make-admin/:userId', requireAdmin, (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    logActivity(req.session.userId, 'admin_grant', `Admin granted admin rights to user ${userId}`, req.ip, req.get('user-agent'));
+    
+    const stmt = db.prepare('UPDATE auth_users SET is_admin = 1 WHERE id = ?');
+    stmt.run(userId);
+    
+    res.json({ success: true, message: 'User promoted to admin' });
+  } catch (error) {
+    console.error('Make admin error:', error);
+    res.status(500).json({ error: 'Failed to update user' });
+  }
+});
+
+// Remove admin rights (ADMIN ONLY)
+app.post('/api/admin/remove-admin/:userId', requireAdmin, (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    // Prevent removing own admin rights
+    if (parseInt(userId) === req.session.userId) {
+      return res.status(400).json({ error: 'Cannot remove your own admin rights' });
+    }
+    
+    logActivity(req.session.userId, 'admin_revoke', `Admin revoked admin rights from user ${userId}`, req.ip, req.get('user-agent'));
+    
+    const stmt = db.prepare('UPDATE auth_users SET is_admin = 0 WHERE id = ?');
+    stmt.run(userId);
+    
+    res.json({ success: true, message: 'Admin rights removed' });
+  } catch (error) {
+    console.error('Remove admin error:', error);
+    res.status(500).json({ error: 'Failed to update user' });
+  }
 });
 
 // ============================================

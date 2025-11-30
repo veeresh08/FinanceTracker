@@ -7,10 +7,11 @@ import InvestmentsPage from './components/InvestmentsPage';
 import ImprovedMonthlyTracker from './components/ImprovedMonthlyTracker';
 import ProfilePage from './components/ProfilePage';
 import LoginPage from './components/LoginPage';
+import AdminDashboard from './components/AdminDashboard';
 import { UserProvider, useUser } from './UserContext';
 import { api } from './api';
 
-type PageType = 'home' | 'dashboard' | 'loans' | 'investments' | 'monthly' | 'profile';
+type PageType = 'home' | 'dashboard' | 'loans' | 'investments' | 'monthly' | 'profile' | 'admin';
 
 function AppContent() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -100,6 +101,8 @@ function AppContent() {
         return <ImprovedMonthlyTracker />;
       case 'profile':
         return <ProfilePage />;
+      case 'admin':
+        return <AdminDashboard />;
       default:
         return <Home />;
     }
@@ -111,6 +114,7 @@ function AppContent() {
         currentPage={currentPage} 
         onNavigate={setCurrentPage}
         userName={authUser?.username || authUser?.phone || currentUser?.user_name}
+        isAdmin={authUser?.is_admin}
         onLogout={handleLogout}
       />
       {renderPage()}

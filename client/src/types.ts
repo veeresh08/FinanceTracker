@@ -12,6 +12,7 @@ export interface UserProfile {
   phone?: string;
   auth_method?: string;
   auth_user_id?: number;
+  is_admin?: boolean;
 }
 
 // Loan
@@ -175,4 +176,62 @@ export interface InvestmentProjection {
   invested: number;
   returns: number;
   total: number;
+}
+
+// Admin Types
+export interface ActivityLog {
+  id: number;
+  user_id: number | null;
+  action_type: string;
+  action_description: string;
+  ip_address?: string;
+  user_agent?: string;
+  created_at: string;
+  username?: string;
+  email?: string;
+}
+
+export interface UserDataSummary {
+  loans: number;
+  investments: number;
+  monthly_records: number;
+  total_loan_amount: number;
+  total_investment_value: number;
+}
+
+export interface AdminUser {
+  id: number;
+  username: string;
+  email: string;
+  phone: string;
+  auth_method: string;
+  is_admin: number;
+  is_verified: number;
+  last_login: string;
+  created_at: string;
+  user_name?: string;
+  currency?: string;
+  monthly_salary?: number;
+  other_income?: number;
+  total_income?: number;
+  data_summary?: UserDataSummary;
+}
+
+export interface PlatformStatistics {
+  users: {
+    total: number;
+    active: number;
+    new: number;
+  };
+  loans: {
+    count: number;
+    total_amount: number;
+  };
+  investments: {
+    count: number;
+    total_value: number;
+  };
+  activity_by_type: { action_type: string; count: number }[];
+  daily_active_users: { date: string; active_users: number }[];
+  top_users: { user_id: number; username: string; email: string; activity_count: number }[];
 }
