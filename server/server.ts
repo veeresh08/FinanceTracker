@@ -97,19 +97,30 @@ process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 // DATABASE SETUP
 // ============================================
 // Download database from GCS first (if in production)
-if (process.env.NODE_ENV === 'production') {
-  downloadDatabaseFromGCS().then(() => {
-    console.log('📊 Database ready');
-  });
+// IMPORTANT: Must AWAIT download before creating Database instance
+let db: any;
+
+async function initializeDatabase() {
+  if (process.env.NODE_ENV === 'production') {
+    console.log('🔄 Waiting for database download from GCS...');
+    await downloadDatabaseFromGCS();
+    console.log('📊 Database downloaded and ready');
+  }
+  
+  const database = new Database(DB_FILE);
+  
+  // Performance optimizations
+  database.pragma('journal_mode = WAL');
+  database.pragma('synchronous = NORMAL');
+  database.pragma('cache_size = 10000');
+  database.pragma('temp_store = MEMORY');
+  
+  return database;
 }
 
-const db = new Database(DB_FILE);
-
-// Performance optimizations
-db.pragma('journal_mode = WAL');
-db.pragma('synchronous = NORMAL');
-db.pragma('cache_size = 10000');
-db.pragma('temp_store = MEMORY');
+// Initialize database - will be awaited before server starts
+(async function() {
+  db = await initializeDatabase();
 
 // ============================================
 // AUTH HELPERS
@@ -2518,4 +2529,6 @@ app.listen(port, host, () => {
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`📊 Database: ${process.env.DATABASE_PATH || 'loan-tracker.db'}`);
 });
+
+})(); // Close the async IIFE (Immediately Invoked Function Expression)
 
