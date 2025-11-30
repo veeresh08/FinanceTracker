@@ -11,13 +11,9 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  BarChart,
-  Bar,
 } from 'recharts';
 import { api } from '../api';
 import { MonthlyRecord, UserProfile } from '../types';
-
-const COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#8b5cf6'];
 
 const EnhancedMonthlyTracker: React.FC = () => {
   const [records, setRecords] = useState<MonthlyRecord[]>([]);
@@ -478,7 +474,7 @@ const EnhancedMonthlyTracker: React.FC = () => {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    label={(props: any) => `${props.name}: ${(props.percent * 100).toFixed(0)}%`}
                     outerRadius={100}
                     fill="#8884d8"
                     dataKey="value"

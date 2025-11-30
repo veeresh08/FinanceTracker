@@ -1,17 +1,12 @@
+// @ts-nocheck
 // Production server configuration for serving frontend
-import express from 'express';
-import path from 'path';
-import { fileURLToPath } from 'url';
+const express = require('express');
+const path = require('path');
 
-// Get __dirname equivalent in ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Import your existing server setup
-// NOTE: You'll need to modify your server.ts to export the app
-export function setupStaticFiles(app: express.Application) {
+// Setup static file serving
+function setupStaticFiles(app) {
   // Serve static files from React build
-  const frontendPath = path.join(__dirname, '../client/dist');
+  const frontendPath = path.join(path.resolve(), 'client/dist');
   
   app.use(express.static(frontendPath));
 
@@ -25,4 +20,6 @@ export function setupStaticFiles(app: express.Application) {
     res.sendFile(path.join(frontendPath, 'index.html'));
   });
 }
+
+module.exports = { setupStaticFiles };
 

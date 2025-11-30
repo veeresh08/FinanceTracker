@@ -3,8 +3,6 @@ import {
   PieChart,
   Pie,
   Cell,
-  LineChart,
-  Line,
   BarChart,
   Bar,
   XAxis,
@@ -209,17 +207,6 @@ const ImprovedMonthlyTracker: React.FC = () => {
   };
 
   const breakdownData = getBreakdownData();
-
-  // For bar chart - show comparison
-  const barChartData = filteredRecords.length > 0 ? [{
-    name: selectedMonth !== 'all' ? selectedMonth : 'Total',
-    Income: totalIncome,
-    'Loan EMI': totalLoanPayments,
-    'Expenses': totalExpenses,
-    'Investments': totalInvestments,
-    'Emergency Fund': totalEmergencyFund,
-    'Savings': totalSavings,
-  }] : [];
 
   if (loading) {
     return (
@@ -639,7 +626,7 @@ const ImprovedMonthlyTracker: React.FC = () => {
                           cx="50%"
                           cy="50%"
                           labelLine={false}
-                          label={({ name, percent }) => `${name}: ${percent}%`}
+                          label={(props: any) => `${props.name}: ${props.percent}%`}
                           outerRadius={90}
                           fill="#8884d8"
                           dataKey="value"

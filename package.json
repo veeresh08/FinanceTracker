@@ -19,6 +19,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@google-cloud/storage": "^7.17.3",
     "@types/bcrypt": "^6.0.0",
     "@types/connect-sqlite3": "^0.9.5",
     "@types/express-session": "^1.18.2",

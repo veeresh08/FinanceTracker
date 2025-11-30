@@ -4,7 +4,8 @@ import { UserProfile } from '../types';
 import { useUser } from '../UserContext';
 
 const ProfilePage: React.FC = () => {
-  const { currentUser, setCurrentUser, allUsers, refreshUsers, loadingUsers } = useUser();
+  const { currentUser, refreshUsers } = useUser();
+  const [loadingProfile, setLoadingProfile] = useState(true);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [editing, setEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState<Partial<UserProfile>>({});
@@ -14,6 +15,7 @@ const ProfilePage: React.FC = () => {
     if (currentUser) {
       setProfile(currentUser);
       setEditedProfile(currentUser);
+      setLoadingProfile(false);
     }
   }, [currentUser]);
 
@@ -31,7 +33,7 @@ const ProfilePage: React.FC = () => {
     }
   };
 
-  if (loadingUsers) {
+  if (loadingProfile) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -103,7 +105,7 @@ const ProfilePage: React.FC = () => {
                 </div>
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900">{profile.user_name || 'No Name'}</h2>
-                  <p className="text-sm text-gray-500">Member since {new Date(profile.created_at || Date.now()).toLocaleDateString()}</p>
+                  <p className="text-sm text-gray-500">Member since {new Date((profile as any).created_at || Date.now()).toLocaleDateString()}</p>
                 </div>
               </div>
               {!editing && (
@@ -307,7 +309,7 @@ const ProfilePage: React.FC = () => {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
               <p className="text-sm text-gray-500">Account Age</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">
-                {Math.floor((Date.now() - new Date(profile.created_at || Date.now()).getTime()) / (1000 * 60 * 60 * 24))} days
+                {Math.floor((Date.now() - new Date((profile as any).created_at || Date.now()).getTime()) / (1000 * 60 * 60 * 24))} days
               </p>
             </div>
 
@@ -319,7 +321,7 @@ const ProfilePage: React.FC = () => {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
               <p className="text-sm text-gray-500">Last Updated</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">
-                {profile.updated_at ? new Date(profile.updated_at).toLocaleDateString() : 'Never'}
+                {(profile as any).updated_at ? new Date((profile as any).updated_at).toLocaleDateString() : 'Never'}
               </p>
             </div>
           </div>

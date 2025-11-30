@@ -8,8 +8,8 @@ interface NavbarProps {
   onLogout?: () => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate, userName, onLogout }) => {
-  const { currentUser, allUsers, setCurrentUser } = useUser();
+const Navbar: React.FC<NavbarProps> = ({ currentPage, onNavigate, onLogout }) => {
+  const { currentUser } = useUser();
   
   const navItems = [
     { id: 'home' as const, label: 'Home', icon: '🏠' },

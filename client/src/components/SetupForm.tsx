@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { API_BASE_URL } from '../api';
 
 interface SetupFormProps {
   onComplete: () => void;
@@ -25,7 +26,7 @@ const SetupForm: React.FC<SetupFormProps> = ({ onComplete }) => {
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:3001/api/profile', {
+      const response = await fetch(`${API_BASE_URL}/profile`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -60,7 +61,7 @@ const SetupForm: React.FC<SetupFormProps> = ({ onComplete }) => {
   const handleSubmitLoans = async () => {
     try {
       for (const loan of loans) {
-        await fetch('http://localhost:3001/api/loans', {
+        await fetch(`${API_BASE_URL}/loans`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

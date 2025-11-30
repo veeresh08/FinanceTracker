@@ -11,13 +11,9 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  LineChart,
-  Line,
-  Area,
-  AreaChart,
 } from 'recharts';
 import { api } from '../api';
-import { DashboardAnalytics, PaymentSchedule } from '../types';
+import { DashboardAnalytics } from '../types';
 import LoanDetails from './LoanDetails';
 
 const COLORS = ['#0ea5e9', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#ef4444'];
@@ -191,7 +187,7 @@ const Dashboard: React.FC = () => {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, value }) => `${name}: $${value.toFixed(0)}`}
+                    label={(props: any) => `${props.name}: $${props.value.toFixed(0)}`}
                     outerRadius={100}
                     fill="#8884d8"
                     dataKey="value"
@@ -225,7 +221,7 @@ const Dashboard: React.FC = () => {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ value }) => `${value.toFixed(1)}%`}
+                    label={(props: any) => `${props.value.toFixed(1)}%`}
                     outerRadius={100}
                     fill="#8884d8"
                     dataKey="value"
@@ -297,11 +293,10 @@ const Dashboard: React.FC = () => {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Loan Name</th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Type</th>
                       <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Principal</th>
                       <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Interest</th>
                       <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Monthly Payment</th>
-                      <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Cleared By</th>
+                      <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Tenure</th>
                       <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Action</th>
                     </tr>
                   </thead>
@@ -317,7 +312,6 @@ const Dashboard: React.FC = () => {
                             <span className="font-medium text-gray-800">{loan.name}</span>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-gray-600 capitalize">{loan.type.replace('_', ' ')}</td>
                         <td className="px-4 py-3 text-right font-medium text-blue-600">
                           ${loan.principal.toFixed(2)}
                         </td>
@@ -328,7 +322,7 @@ const Dashboard: React.FC = () => {
                           ${loan.monthlyPayment.toFixed(2)}
                         </td>
                         <td className="px-4 py-3 text-right text-sm text-gray-600">
-                          {new Date(loan.clearedBy).toLocaleDateString()}
+                          {loan.tenure} months
                         </td>
                         <td className="px-4 py-3 text-center">
                           <button

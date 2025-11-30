@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../api';
 
 interface LoginPageProps {
   onLoginSuccess: (user: any) => void;
@@ -25,7 +26,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     currency: 'INR'
   });
 
-  const API_URL = 'http://localhost:3001/api';
+  const API_URL = API_BASE_URL;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

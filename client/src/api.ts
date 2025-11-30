@@ -1,7 +1,24 @@
 import axios from 'axios';
 import { UserProfile, Loan, IncomeSource, DashboardAnalytics, PaymentSchedule, MonthlyRecord, Goal, MonthlyExpense, ExpenseCategory, ExtraPayment, Investment } from './types';
 
-const API_BASE_URL = 'http://localhost:3001/api';
+// Dynamic API URL based on current hostname
+// This ensures we always call the correct backend regardless of caching
+export const getApiBaseUrl = () => {
+  const hostname = window.location.hostname;
+  
+  // If running on localhost, use local backend
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return 'http://localhost:3001/api';
+  }
+  
+  // If running on Cloud Run or any other domain, use relative URL (same origin)
+  return '/api';
+};
+
+export const API_BASE_URL = getApiBaseUrl();
+
+console.log('🔗 API Base URL:', API_BASE_URL);
+console.log('🌐 Current hostname:', window.location.hostname);
 
 // Configure axios to send cookies with requests
 axios.defaults.withCredentials = true;
@@ -99,5 +116,15 @@ export const api = {
   updateInvestment: (id: number, data: Partial<Investment>) => 
     axios.put<Investment>(`${API_BASE_URL}/investments/${id}`, data),
   deleteInvestment: (id: number) => axios.delete(`${API_BASE_URL}/investments/${id}`),
+
+  // Import/Export
+  exportLoans: (user_id: number, format: 'json' | 'csv' = 'json') =>
+    axios.post(`${API_BASE_URL}/loans/export`, { user_id, format }),
+  importLoans: (user_id: number, data: any, format: 'json' | 'csv' = 'json') =>
+    axios.post(`${API_BASE_URL}/loans/import`, { user_id, data, format }),
+  exportInvestments: (user_id: number, format: 'json' | 'csv' = 'json') =>
+    axios.post(`${API_BASE_URL}/investments/export`, { user_id, format }),
+  importInvestments: (user_id: number, data: any, format: 'json' | 'csv' = 'json') =>
+    axios.post(`${API_BASE_URL}/investments/import`, { user_id, data, format }),
 };
 

@@ -11,7 +11,6 @@ import {
   ResponsiveContainer,
   LineChart,
   Line,
-  TooltipProps,
 } from 'recharts';
 import { api } from '../api';
 import { DashboardAnalytics, UserProfile } from '../types';
@@ -117,8 +116,8 @@ const ImprovedDashboard: React.FC = () => {
   const currencySymbol = profile.currency === 'INR' ? '₹' : profile.currency === 'EUR' ? '€' : profile.currency === 'GBP' ? '£' : '$';
 
   // Custom tooltip for line chart
-  const CustomTooltip = ({ active, payload, label }: TooltipProps<any, any>) => {
-    if (active && payload && payload.length && payload[0].payload) {
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length && payload[0] && payload[0].payload) {
       const data = payload[0].payload;
       const monthNum = data.month;
       const years = Math.floor(monthNum / 12);
@@ -219,7 +218,7 @@ const ImprovedDashboard: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500 mb-1">Debt-Free By</p>
-                <p className="text-2xl font-bold text-green-600">{summary.yearsRemaining}y {summary.monthsRemaining % 12}m</p>
+                <p className="text-2xl font-bold text-green-600">{summary.yearsRemaining}y</p>
                 <p className="text-xs text-gray-500 mt-1">{new Date(summary.allLoansClearedBy).toLocaleDateString()}</p>
               </div>
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -297,7 +296,7 @@ const ImprovedDashboard: React.FC = () => {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, value }) => `${name}: ${currencySymbol}${value.toLocaleString()}`}
+                  label={(props: any) => `${props.name}: ${currencySymbol}${props.value.toLocaleString()}`}
                   outerRadius={100}
                   fill="#8884d8"
                   dataKey="value"

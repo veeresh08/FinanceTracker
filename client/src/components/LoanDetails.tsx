@@ -65,8 +65,7 @@ const LoanDetails: React.FC<LoanDetailsProps> = ({ loanId, onBack }) => {
   // Prepare chart data - sample every 6 months for readability
   const chartData = schedule.filter((_, index) => index % 6 === 0 || index === schedule.length - 1);
 
-  const totalPaid = loan.monthly_payment * loan.loan_term_months;
-  const progressPercent = ((loan.loan_term_months - schedule.length) / loan.loan_term_months) * 100;
+  const totalPaid = loan.monthly_payment * (loan.loan_term_months || loan.tenure || 0);
 
   return (
     <div>
@@ -90,8 +89,8 @@ const LoanDetails: React.FC<LoanDetailsProps> = ({ loanId, onBack }) => {
       <div className="card mb-6 bg-gradient-to-br from-primary-500 to-primary-600 text-white">
         <div className="flex items-start justify-between mb-4">
           <div>
-            <h1 className="text-3xl font-bold mb-2">{loan.loan_name}</h1>
-            <p className="text-primary-100 capitalize">{loan.loan_type.replace('_', ' ')} Loan</p>
+            <h1 className="text-3xl font-bold mb-2">{loan.loan_name || loan.name}</h1>
+            <p className="text-primary-100 capitalize">{(loan.loan_type || loan.type || 'personal').replace('_', ' ')} Loan</p>
           </div>
           <div className="text-right">
             <p className="text-sm opacity-90">Status</p>
@@ -104,7 +103,7 @@ const LoanDetails: React.FC<LoanDetailsProps> = ({ loanId, onBack }) => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
           <div>
             <p className="text-sm opacity-90">Principal Amount</p>
-            <p className="text-2xl font-bold">${loan.principal_amount.toFixed(2)}</p>
+            <p className="text-2xl font-bold">${(loan.principal_amount || loan.principal || 0).toFixed(2)}</p>
           </div>
           <div>
             <p className="text-sm opacity-90">Interest Rate</p>
@@ -116,7 +115,7 @@ const LoanDetails: React.FC<LoanDetailsProps> = ({ loanId, onBack }) => {
           </div>
           <div>
             <p className="text-sm opacity-90">Loan Term</p>
-            <p className="text-2xl font-bold">{loan.loan_term_months} months</p>
+            <p className="text-2xl font-bold">{loan.loan_term_months || loan.tenure || 0} months</p>
           </div>
         </div>
       </div>
@@ -125,9 +124,9 @@ const LoanDetails: React.FC<LoanDetailsProps> = ({ loanId, onBack }) => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="card">
           <p className="text-sm text-gray-600 mb-1">Total Interest</p>
-          <p className="text-3xl font-bold text-red-600">${loan.total_interest.toFixed(2)}</p>
+          <p className="text-3xl font-bold text-red-600">${(loan.total_interest || 0).toFixed(2)}</p>
           <p className="text-xs text-gray-500 mt-2">
-            {((loan.total_interest / loan.principal_amount) * 100).toFixed(1)}% of principal
+            {(((loan.total_interest || 0) / (loan.principal_amount || loan.principal || 1)) * 100).toFixed(1)}% of principal
           </p>
         </div>
 
@@ -135,7 +134,7 @@ const LoanDetails: React.FC<LoanDetailsProps> = ({ loanId, onBack }) => {
           <p className="text-sm text-gray-600 mb-1">Total Amount Payable</p>
           <p className="text-3xl font-bold text-gray-800">${totalPaid.toFixed(2)}</p>
           <p className="text-xs text-gray-500 mt-2">
-            Principal + Interest over {Math.floor(loan.loan_term_months / 12)} years
+            Principal + Interest over {Math.floor((loan.loan_term_months || loan.tenure || 0) / 12)} years
           </p>
         </div>
 
@@ -144,14 +143,14 @@ const LoanDetails: React.FC<LoanDetailsProps> = ({ loanId, onBack }) => {
           <p className="text-3xl font-bold text-green-600">
             {new Date(
               new Date(loan.start_date).setMonth(
-                new Date(loan.start_date).getMonth() + loan.loan_term_months
+                new Date(loan.start_date).getMonth() + (loan.loan_term_months || loan.tenure || 0)
               )
             ).getFullYear()}
           </p>
           <p className="text-xs text-gray-500 mt-2">
             {new Date(
               new Date(loan.start_date).setMonth(
-                new Date(loan.start_date).getMonth() + loan.loan_term_months
+                new Date(loan.start_date).getMonth() + (loan.loan_term_months || loan.tenure || 0)
               )
             ).toLocaleDateString()}
           </p>

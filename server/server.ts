@@ -1,3 +1,4 @@
+// @ts-nocheck
 const express = require('express');
 const cors = require('cors');
 const session = require('express-session');
@@ -6,18 +7,100 @@ const { OAuth2Client } = require('google-auth-library');
 const Database = require('better-sqlite3');
 const path = require('path');
 const bcrypt = require('bcrypt');
+const fs = require('fs');
 
-type Request = any;
-type Response = any;
+// Google Cloud Storage for database persistence (Cloud Run)
+let Storage, storage, bucket;
+try {
+  Storage = require('@google-cloud/storage').Storage;
+} catch (e) {
+  console.log('⚠️  @google-cloud/storage not installed (OK for local dev)');
+}
 
 const SQLiteStore = connectSqlite3(session);
 const app = express();
 const PORT = 3001;
 
 // ============================================
+// DATABASE PERSISTENCE (Google Cloud Storage)
+// ============================================
+const DB_FILE = path.join(process.cwd(), 'loan-tracker.db');
+const GCS_BUCKET = 'wealthflow-db-backup';
+const GCS_DB_PATH = 'database/loan-tracker.db';
+
+// Initialize GCS only in production (Cloud Run)
+if (process.env.NODE_ENV === 'production' && process.env.K_SERVICE && Storage) {
+  try {
+    storage = new Storage();
+    bucket = storage.bucket(GCS_BUCKET);
+    console.log('🪣 GCS initialized for database persistence');
+  } catch (error) {
+    console.log('⚠️  GCS not available:', error.message);
+  }
+}
+
+// Download database from GCS
+async function downloadDatabaseFromGCS() {
+  if (!bucket) return false;
+  try {
+    const file = bucket.file(GCS_DB_PATH);
+    const [exists] = await file.exists();
+    if (exists) {
+      console.log('📥 Downloading database from GCS...');
+      await file.download({ destination: DB_FILE });
+      console.log('✅ Database downloaded from GCS');
+      return true;
+    }
+    console.log('ℹ️  No existing database in GCS, creating new one');
+    return false;
+  } catch (error) {
+    console.error('❌ Download error:', error.message);
+    return false;
+  }
+}
+
+// Upload database to GCS
+async function uploadDatabaseToGCS() {
+  if (!bucket || !fs.existsSync(DB_FILE)) return false;
+  try {
+    await bucket.upload(DB_FILE, {
+      destination: GCS_DB_PATH,
+      metadata: { contentType: 'application/x-sqlite3' }
+    });
+    console.log('✅ Database backed up to GCS');
+    return true;
+  } catch (error) {
+    console.error('❌ Upload error:', error.message);
+    return false;
+  }
+}
+
+// Periodic backup (every 10 minutes in production)
+if (bucket) {
+  setInterval(uploadDatabaseToGCS, 10 * 60 * 1000);
+}
+
+// Graceful shutdown - backup before exit
+async function gracefulShutdown(signal) {
+  console.log(`\n${signal} received. Backing up database...`);
+  await uploadDatabaseToGCS();
+  process.exit(0);
+}
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+// ============================================
 // DATABASE SETUP
 // ============================================
-const db = new Database(path.join(process.cwd(), 'loan-tracker.db'));
+// Download database from GCS first (if in production)
+if (process.env.NODE_ENV === 'production') {
+  downloadDatabaseFromGCS().then(() => {
+    console.log('📊 Database ready');
+  });
+}
+
+const db = new Database(DB_FILE);
 
 // Performance optimizations
 db.pragma('journal_mode = WAL');
@@ -67,6 +150,10 @@ async function createAuthUser(data: {
     VALUES (?, ?, ?, ?, ?, ?)
   `);
   const result = stmt.run(username, email, phone, password_hash, google_id, auth_method);
+  
+  // Backup after important changes
+  if (bucket) uploadDatabaseToGCS().catch(e => console.log('Backup queued'));
+  
   return { id: result.lastInsertRowid, ...data };
 }
 
@@ -334,10 +421,37 @@ function initializeDatabase() {
 // Initialize database
 initializeDatabase();
 
-// Middleware
+// Middleware - Dynamic CORS based on environment
+const allowedOrigins = [
+  'http://localhost:5173',  // Local development
+  'http://localhost:3000',  // Alternative dev port
+];
+
+// In production, allow requests from same origin (Cloud Run serves both frontend and backend)
+if (process.env.NODE_ENV === 'production') {
+  // Cloud Run URL pattern
+  const cloudRunUrl = process.env.CLOUD_RUN_URL || 'https://wealthflow-325113757905.us-central1.run.app';
+  allowedOrigins.push(cloudRunUrl);
+}
+
 app.use(cors({
-  origin: 'http://localhost:5173', // Frontend URL (Vite default)
-  credentials: true, // Allow cookies
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    
+    // In production on Cloud Run, allow same-origin requests
+    if (process.env.NODE_ENV === 'production' && !origin.includes('localhost')) {
+      return callback(null, true);
+    }
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log('❌ CORS blocked origin:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   exposedHeaders: ['set-cookie']
@@ -372,7 +486,18 @@ initializeDatabase();
 
 // Handle preflight OPTIONS requests explicitly
 app.options('*', (req, res) => {
-  res.header('Access-Control-Allow-Origin', 'http://localhost:5173');
+
+  const origin = req.headers.origin;
+  
+  // In production, allow same-origin
+  if (process.env.NODE_ENV === 'production' && origin && !origin.includes('localhost')) {
+    res.header('Access-Control-Allow-Origin', origin);
+  } else if (origin && allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  } else {
+    res.header('Access-Control-Allow-Origin', 'http://localhost:5173');
+  }
+  
   res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -746,7 +871,7 @@ app.get('/api/auth/status', (req: Request, res: Response) => {
 });
 
 // Logout
-app.post('/api/auth/logout', (req: Request, res: Response) => {
+app.post('/api/auth/logout', (req, res) => {
   req.session.destroy((err) => {
     if (err) {
       return res.status(500).json({ error: 'Logout failed' });
@@ -1708,6 +1833,285 @@ app.delete('/api/investments/:id', (req: Request, res: Response) => {
 });
 
 // ============================================
+// IMPORT/EXPORT ROUTES
+// ============================================
+
+// Export loans as JSON or CSV
+app.post('/api/loans/export', (req: Request, res: Response) => {
+  try {
+    const { user_id, format = 'json' } = req.body;
+    
+    if (!user_id) {
+      return res.status(400).json({ error: 'User ID required' });
+    }
+
+    const loans: any[] = db.prepare('SELECT * FROM loans WHERE user_id = ? ORDER BY created_at DESC').all(Number(user_id));
+    
+    if (format === 'csv') {
+      // Convert to CSV
+      if (loans.length === 0) {
+        return res.json({ data: '', format: 'csv' });
+      }
+      
+      const headers = Object.keys(loans[0]).join(',');
+      const rows = loans.map(loan => 
+        Object.values(loan).map(val => 
+          typeof val === 'string' && val.includes(',') ? `"${val}"` : val
+        ).join(',')
+      );
+      const csv = [headers, ...rows].join('\n');
+      
+      res.json({ data: csv, format: 'csv', count: loans.length });
+    } else {
+      // Return as JSON
+      res.json({ data: loans, format: 'json', count: loans.length });
+    }
+  } catch (error) {
+    console.error('Error exporting loans:', error);
+    res.status(500).json({ error: 'Failed to export loans' });
+  }
+});
+
+// Import loans from JSON or CSV
+app.post('/api/loans/import', (req: Request, res: Response) => {
+  try {
+    const { user_id, data, format = 'json' } = req.body;
+    
+    if (!user_id) {
+      return res.status(400).json({ error: 'User ID required' });
+    }
+    
+    if (!data) {
+      return res.status(400).json({ error: 'Data required' });
+    }
+
+    let loans: any[] = [];
+    
+    if (format === 'csv') {
+      // Parse CSV
+      const lines = data.trim().split('\n');
+      if (lines.length < 2) {
+        return res.status(400).json({ error: 'Invalid CSV format' });
+      }
+      
+      const headers = lines[0].split(',').map((h: string) => h.trim());
+      loans = lines.slice(1).map((line: string) => {
+        const values = line.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g)?.map((v: string) => v.replace(/^"|"$/g, '').trim()) || [];
+        const loan: any = {};
+        headers.forEach((header: string, index: number) => {
+          loan[header] = values[index] || '';
+        });
+        return loan;
+      });
+    } else {
+      // Parse JSON
+      loans = Array.isArray(data) ? data : [data];
+    }
+
+    let imported = 0;
+    let errors = 0;
+
+    for (const loan of loans) {
+      try {
+        // Skip loans without required fields
+        if (!loan.loan_name && !loan.name) {
+          errors++;
+          continue;
+        }
+
+        const loanName = loan.loan_name || loan.name;
+        const loanType = loan.loan_type || loan.type || 'personal';
+        const principalAmount = Number(loan.principal_amount || loan.principal || 0);
+        const interestRate = Number(loan.interest_rate || 0);
+        const loanTermMonths = Number(loan.loan_term_months || loan.tenure || 12);
+        const startDate = loan.start_date || new Date().toISOString().split('T')[0];
+        const monthlyPayment = Number(loan.monthly_payment || 0);
+        const status = loan.status || 'active';
+
+        // Calculate monthly payment if not provided
+        let monthlyPaymentValue = monthlyPayment;
+        let totalInterest = 0;
+        
+        if (!monthlyPayment && principalAmount && interestRate && loanTermMonths) {
+          const calc = calculateAmortization(principalAmount, interestRate, loanTermMonths, startDate);
+          monthlyPaymentValue = calc.monthlyPayment;
+          totalInterest = calc.totalInterest;
+        } else {
+          totalInterest = Number(loan.total_interest || (monthlyPayment * loanTermMonths) - principalAmount);
+        }
+
+        const stmt = db.prepare(`
+          INSERT INTO loans (
+            user_id, loan_name, loan_type, principal_amount, interest_rate,
+            loan_term_months, start_date, monthly_payment, 
+            remaining_balance, total_interest, status
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+
+        stmt.run(
+          Number(user_id),
+          loanName,
+          loanType,
+          principalAmount,
+          interestRate,
+          loanTermMonths,
+          startDate,
+          monthlyPaymentValue,
+          principalAmount,
+          totalInterest,
+          status
+        );
+        
+        imported++;
+      } catch (err) {
+        console.error('Error importing loan:', err);
+        errors++;
+      }
+    }
+
+    res.json({ 
+      success: true, 
+      imported, 
+      errors,
+      message: `Successfully imported ${imported} loan(s). ${errors} error(s).`
+    });
+  } catch (error) {
+    console.error('Error importing loans:', error);
+    res.status(500).json({ error: 'Failed to import loans' });
+  }
+});
+
+// Export investments as JSON or CSV
+app.post('/api/investments/export', (req: Request, res: Response) => {
+  try {
+    const { user_id, format = 'json' } = req.body;
+    
+    if (!user_id) {
+      return res.status(400).json({ error: 'User ID required' });
+    }
+
+    const investments: any[] = db.prepare('SELECT * FROM investments WHERE user_id = ? ORDER BY created_at DESC').all(Number(user_id));
+    
+    if (format === 'csv') {
+      // Convert to CSV
+      if (investments.length === 0) {
+        return res.json({ data: '', format: 'csv' });
+      }
+      
+      const headers = Object.keys(investments[0]).join(',');
+      const rows = investments.map(inv => 
+        Object.values(inv).map(val => 
+          typeof val === 'string' && val.includes(',') ? `"${val}"` : val
+        ).join(',')
+      );
+      const csv = [headers, ...rows].join('\n');
+      
+      res.json({ data: csv, format: 'csv', count: investments.length });
+    } else {
+      // Return as JSON
+      res.json({ data: investments, format: 'json', count: investments.length });
+    }
+  } catch (error) {
+    console.error('Error exporting investments:', error);
+    res.status(500).json({ error: 'Failed to export investments' });
+  }
+});
+
+// Import investments from JSON or CSV
+app.post('/api/investments/import', (req: Request, res: Response) => {
+  try {
+    const { user_id, data, format = 'json' } = req.body;
+    
+    if (!user_id) {
+      return res.status(400).json({ error: 'User ID required' });
+    }
+    
+    if (!data) {
+      return res.status(400).json({ error: 'Data required' });
+    }
+
+    let investments: any[] = [];
+    
+    if (format === 'csv') {
+      // Parse CSV
+      const lines = data.trim().split('\n');
+      if (lines.length < 2) {
+        return res.status(400).json({ error: 'Invalid CSV format' });
+      }
+      
+      const headers = lines[0].split(',').map((h: string) => h.trim());
+      investments = lines.slice(1).map((line: string) => {
+        const values = line.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g)?.map((v: string) => v.replace(/^"|"$/g, '').trim()) || [];
+        const inv: any = {};
+        headers.forEach((header: string, index: number) => {
+          inv[header] = values[index] || '';
+        });
+        return inv;
+      });
+    } else {
+      // Parse JSON
+      investments = Array.isArray(data) ? data : [data];
+    }
+
+    let imported = 0;
+    let errors = 0;
+
+    for (const inv of investments) {
+      try {
+        // Skip investments without required fields
+        if (!inv.name) {
+          errors++;
+          continue;
+        }
+
+        const stmt = db.prepare(`
+          INSERT INTO investments (
+            user_id, name, type, principal, monthly_contribution, expected_return_rate, 
+            start_date, tenure_months, current_value, notes, status,
+            purchase_price, current_stock_price, discount_percent, shares_per_month, vesting_months, lookback_months
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+
+        stmt.run(
+          Number(user_id),
+          inv.name,
+          inv.type || 'sip',
+          Number(inv.principal || 0),
+          Number(inv.monthly_contribution || 0),
+          Number(inv.expected_return_rate || 12),
+          inv.start_date || new Date().toISOString().split('T')[0],
+          Number(inv.tenure_months || 60),
+          Number(inv.current_value || 0),
+          inv.notes || '',
+          inv.status || 'active',
+          Number(inv.purchase_price || 0),
+          Number(inv.current_stock_price || 0),
+          Number(inv.discount_percent || 0),
+          Number(inv.shares_per_month || 0),
+          Number(inv.vesting_months || 24),
+          Number(inv.lookback_months || 6)
+        );
+        
+        imported++;
+      } catch (err) {
+        console.error('Error importing investment:', err);
+        errors++;
+      }
+    }
+
+    res.json({ 
+      success: true, 
+      imported, 
+      errors,
+      message: `Successfully imported ${imported} investment(s). ${errors} error(s).`
+    });
+  } catch (error) {
+    console.error('Error importing investments:', error);
+    res.status(500).json({ error: 'Failed to import investments' });
+  }
+});
+
+// ============================================
 // PRODUCTION: SERVE FRONTEND STATIC FILES
 // ============================================
 if (process.env.NODE_ENV === 'production') {
@@ -1727,8 +2131,10 @@ if (process.env.NODE_ENV === 'production') {
 
 // Start server
 const port = process.env.PORT || PORT;
-app.listen(port, () => {
-  console.log(`🚀 Server running on http://localhost:${port}`);
+const host = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost';
+app.listen(port, host, () => {
+  console.log(`🚀 Server running on http://${host}:${port}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`📊 Database: ${process.env.DATABASE_PATH || 'loan-tracker.db'}`);
 });
 

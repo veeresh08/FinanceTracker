@@ -54,6 +54,66 @@ const InvestmentsPage: React.FC = () => {
     }
   };
 
+  // Export investments to JSON or CSV
+  const handleExport = async (format: 'json' | 'csv') => {
+    if (!currentUser) return;
+    try {
+      const response = await api.exportInvestments(currentUser.id, format);
+      const { data, count } = response.data;
+      
+      if (count === 0) {
+        alert('No investments to export!');
+        return;
+      }
+
+      // Create downloadable file
+      const blob = new Blob(
+        [format === 'json' ? JSON.stringify(data, null, 2) : data],
+        { type: format === 'json' ? 'application/json' : 'text/csv' }
+      );
+      
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `investments_${new Date().toISOString().split('T')[0]}.${format}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      alert(`✅ Successfully exported ${count} investment(s) as ${format.toUpperCase()}!`);
+    } catch (error) {
+      console.error('Error exporting investments:', error);
+      alert('❌ Failed to export investments');
+    }
+  };
+
+  // Import investments from file
+  const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!currentUser) return;
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const format = file.name.endsWith('.csv') ? 'csv' : 'json';
+      const data = format === 'json' ? JSON.parse(text) : text;
+
+      const response = await api.importInvestments(currentUser.id, data, format);
+      const { imported, errors, message } = response.data;
+      
+      await fetchInvestments();
+      alert(`${message}\n\n✅ Imported: ${imported}\n❌ Errors: ${errors}`);
+      
+      // Reset file input
+      event.target.value = '';
+    } catch (error) {
+      console.error('Error importing investments:', error);
+      alert('❌ Failed to import investments. Please check the file format.');
+      event.target.value = '';
+    }
+  };
+
   const handleEdit = (investment: Investment) => {
     setEditingId(investment.id);
     setFormData({
@@ -169,12 +229,56 @@ const InvestmentsPage: React.FC = () => {
             <h1 className="text-3xl font-bold text-gray-900">💹 Investment Portfolio</h1>
             <p className="text-gray-600">Track your ESPP, SIP, Mutual Funds & more</p>
           </div>
-          <button
-            onClick={() => setShowAddForm(!showAddForm)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            {showAddForm ? '❌ Cancel' : '➕ Add Investment'}
-          </button>
+          <div className="flex gap-3">
+            {/* Import/Export Buttons */}
+            <div className="relative inline-block">
+              <button
+                onClick={() => document.getElementById('investment-import-file')?.click()}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+                title="Import investments from JSON or CSV file"
+              >
+                📥 Import
+              </button>
+              <input
+                id="investment-import-file"
+                type="file"
+                accept=".json,.csv"
+                onChange={handleImport}
+                className="hidden"
+              />
+            </div>
+            
+            <div className="relative inline-block group">
+              <button
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+                title="Export investments to file"
+              >
+                📤 Export
+              </button>
+              {/* Dropdown menu */}
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 hidden group-hover:block z-10">
+                <button
+                  onClick={() => handleExport('json')}
+                  className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded-t-lg"
+                >
+                  📄 Export as JSON
+                </button>
+                <button
+                  onClick={() => handleExport('csv')}
+                  className="block w-full text-left px-4 py-2 hover:bg-gray-100 rounded-b-lg"
+                >
+                  📊 Export as CSV
+                </button>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowAddForm(!showAddForm)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              {showAddForm ? '❌ Cancel' : '➕ Add Investment'}
+            </button>
+          </div>
         </div>
 
         {/* Summary Cards */}
