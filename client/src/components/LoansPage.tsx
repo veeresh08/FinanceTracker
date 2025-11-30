@@ -295,13 +295,13 @@ const LoansPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-gray-50 p-6">
+    <div className="min-h-[calc(100vh-4rem)] pb-20 pt-6 px-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-4xl font-bold text-gray-800 mb-2">Your Loans 💰</h1>
-            <p className="text-gray-600">Manage and track all your loans in one place</p>
+            <h1 className="text-4xl font-bold text-white mb-2">Your Loans 💰</h1>
+            <p className="text-slate-400">Manage and track all your loans in one place</p>
           </div>
           <div className="flex gap-3">
             {/* Import/Export Buttons */}

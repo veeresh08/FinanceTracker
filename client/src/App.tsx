@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import Navbar from './components/Navbar';
 import Home from './components/Home';
-import ImprovedDashboard from './components/ImprovedDashboard';
+// import ImprovedDashboard from './components/ImprovedDashboard';
+import ModernDashboard from './components/ModernDashboard';
 import LoansPage from './components/LoansPage';
 import InvestmentsPage from './components/InvestmentsPage';
 import ImprovedMonthlyTracker from './components/ImprovedMonthlyTracker';
@@ -99,7 +100,7 @@ function AppContent() {
       case 'home':
         return <Home />;
       case 'dashboard':
-        return <ImprovedDashboard />;
+        return <ModernDashboard />;
       case 'loans':
         return <LoansPage />;
       case 'investments':
