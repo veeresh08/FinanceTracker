@@ -100,7 +100,7 @@ process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 // IMPORTANT: Must AWAIT download before creating Database instance
 let db: any;
 
-async function initializeDatabase() {
+async function createDatabaseConnection() {
   if (process.env.NODE_ENV === 'production') {
     console.log('🔄 Waiting for database download from GCS...');
     await downloadDatabaseFromGCS();
@@ -120,7 +120,10 @@ async function initializeDatabase() {
 
 // Initialize database - will be awaited before server starts
 (async function() {
-  db = await initializeDatabase();
+  db = await createDatabaseConnection();
+  
+  // Initialize schema and tables
+  initializeDatabase();
 
 // ============================================
 // AUTH HELPERS
@@ -512,9 +515,6 @@ function initializeDatabase() {
   console.log('Database initialized successfully');
 }
 
-// Initialize database
-initializeDatabase();
-
 // Middleware - Dynamic CORS based on environment
 const allowedOrigins = [
   'http://localhost:5173',  // Local development
@@ -574,9 +574,6 @@ app.use(session({
     secure: false // Set to true in production with HTTPS
   }
 }));
-
-// Initialize database
-initializeDatabase();
 
 // Handle preflight OPTIONS requests explicitly
 app.options('*', (req, res) => {
