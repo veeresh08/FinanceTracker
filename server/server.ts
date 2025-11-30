@@ -24,9 +24,12 @@ const PORT = 3001;
 // ============================================
 // DATABASE PERSISTENCE (Google Cloud Storage)
 // ============================================
-const DB_FILE = path.join(process.cwd(), 'loan-tracker.db');
+// Use DATABASE_PATH env var if set (for Cloud Run), otherwise use local path
+const DB_FILE = process.env.DATABASE_PATH || path.join(process.cwd(), 'loan-tracker.db');
 const GCS_BUCKET = 'wealthflow-db-veeresh-2024';
 const GCS_DB_PATH = 'database/loan-tracker.db';
+
+console.log(`📊 Database path: ${DB_FILE}`);
 
 // Initialize GCS only in production (Cloud Run)
 if (process.env.NODE_ENV === 'production' && process.env.K_SERVICE && Storage) {
