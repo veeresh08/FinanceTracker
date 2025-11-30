@@ -687,13 +687,20 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
     const { username, password } = req.body;
 
     if (!username || !password) {
-      return res.status(400).json({ error: 'Username and password required' });
+      return res.status(400).json({ error: 'Username/email and password required' });
     }
 
-    // Find user
-    const authUser: any = findUserByUsername(username);
+    // Find user by username OR email
+    let authUser: any = findUserByUsername(username);
+    
+    // If not found by username, try email
     if (!authUser) {
-      logActivity(null, 'login_failed', `Failed login attempt for username: ${username}`, req.ip, req.get('user-agent'));
+      const stmt = db.prepare('SELECT * FROM auth_users WHERE email = ?');
+      authUser = stmt.get(username);
+    }
+    
+    if (!authUser) {
+      logActivity(null, 'login_failed', `Failed login attempt for: ${username}`, req.ip, req.get('user-agent'));
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
