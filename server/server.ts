@@ -1762,8 +1762,8 @@ app.post('/api/monthly-records', (req: Request, res: Response) => {
     const loans: any[] = db.prepare("SELECT * FROM loans WHERE user_id = ? AND status = 'active'").all(userId);
     const total_loan_payment = loans.reduce((sum, loan) => sum + loan.monthly_payment, 0);
     
-    // Calculate savings (income - loans - expenses - investments - emergency fund)
-    const savings = total_income - total_loan_payment - (other_expenses || 0) - (investments || 0) - (emergency_fund || 0);
+    // Calculate savings (income - loans - expenses - investments - emergency fund - credit card)
+    const savings = total_income - total_loan_payment - (other_expenses || 0) - (investments || 0) - (emergency_fund || 0) - (credit_card || 0);
 
     const stmt = db.prepare(`
       INSERT OR REPLACE INTO monthly_records (

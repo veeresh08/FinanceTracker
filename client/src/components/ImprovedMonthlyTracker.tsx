@@ -1,20 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import {
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
+  PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  AreaChart, Area
 } from 'recharts';
 import { api } from '../api';
 import { MonthlyRecord, UserProfile, Loan } from '../types';
 import { useUser } from '../UserContext';
+import { 
+  TrendingUp, Receipt, Target, Plus, Edit2, Trash2, Calendar,
+  TrendingDown, DollarSign, Activity, PieChart as PieChartIcon, Coffee, Home, Lightbulb, CreditCard
+} from 'lucide-react';
 
 const ImprovedMonthlyTracker: React.FC = () => {
   const { currentUser } = useUser();
@@ -26,11 +21,14 @@ const ImprovedMonthlyTracker: React.FC = () => {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  
+  const [paidStatus, setPaidStatus] = useState<{ [key: string]: boolean }>({});
+
   const [formData, setFormData] = useState({
     month: new Date().toLocaleString('default', { month: 'long' }),
     year: new Date().getFullYear(),
-    salary: 0, // Will be populated from profile when opening form
-    other_income: 0, // Will be populated from profile when opening form
+    salary: 0, 
+    other_income: 0,
     rent: 0,
     food: 0,
     transport: 0,
@@ -48,8 +46,17 @@ const ImprovedMonthlyTracker: React.FC = () => {
   useEffect(() => {
     if (currentUser) {
       fetchData();
+      const savedStatus = localStorage.getItem(`paid_status_${currentUser.id}`);
+      if (savedStatus) setPaidStatus(JSON.parse(savedStatus));
     }
   }, [currentUser]);
+
+  const togglePaid = (recordId: number, category: string) => {
+    const key = `${recordId}_${category}`;
+    const newStatus = { ...paidStatus, [key]: !paidStatus[key] };
+    setPaidStatus(newStatus);
+    localStorage.setItem(`paid_status_${currentUser?.id}`, JSON.stringify(newStatus));
+  };
 
   const fetchData = async () => {
     if (!currentUser) return;
@@ -64,11 +71,8 @@ const ImprovedMonthlyTracker: React.FC = () => {
       setProfile(profileRes.data);
       setLoans(loansRes.data);
       
-      // Calculate total monthly investment from active investments (include null status as active)
       const activeInvestments = investmentsRes.data.filter((inv: any) => inv.status === 'active' || inv.status === null);
       const totalMonthlyInvestment = activeInvestments.reduce((sum: number, inv: any) => sum + inv.monthly_contribution, 0);
-      
-      // Store for auto-population
       (window as any).__MONTHLY_INVESTMENT__ = totalMonthlyInvestment;
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -80,7 +84,6 @@ const ImprovedMonthlyTracker: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentUser) return;
-    
     try {
       const totalExpenses = (formData.rent || 0) + (formData.food || 0) + 
         (formData.transport || 0) + (formData.utilities || 0) + (formData.entertainment || 0);
@@ -89,11 +92,6 @@ const ImprovedMonthlyTracker: React.FC = () => {
         ...formData,
         user_id: currentUser.id,
         other_expenses: totalExpenses,
-        rent: formData.rent || 0,
-        food: formData.food || 0,
-        transport: formData.transport || 0,
-        utilities: formData.utilities || 0,
-        entertainment: formData.entertainment || 0,
         investments: formData.investments || 0,
         emergency_fund: formData.emergency_fund || 0,
         credit_card: formData.credit_card || 0,
@@ -122,11 +120,11 @@ const ImprovedMonthlyTracker: React.FC = () => {
       year: record.year,
       salary: record.salary,
       other_income: record.other_income,
-      rent: 0,
-      food: 0,
-      transport: 0,
-      utilities: 0,
-      entertainment: 0,
+      rent: record.rent || 0,
+      food: record.food || 0,
+      transport: record.transport || 0,
+      utilities: record.utilities || 0,
+      entertainment: record.entertainment || 0,
       credit_card: record.credit_card || 0,
       investments: record.investments || 0,
       emergency_fund: record.emergency_fund || 0,
@@ -134,14 +132,14 @@ const ImprovedMonthlyTracker: React.FC = () => {
     });
     setEditingId(record.id);
     setShowAddForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleDelete = async (id: number, month: string, year: number) => {
-    if (window.confirm(`Delete record for ${month} ${year}?`)) {
+  const handleDelete = async (id: number) => {
+    if (window.confirm(`Delete this record?`)) {
       try {
         await api.deleteMonthlyRecord(id);
         await fetchData();
-        alert('✅ Record deleted!');
       } catch (error) {
         alert('❌ Failed to delete record');
       }
@@ -149,26 +147,17 @@ const ImprovedMonthlyTracker: React.FC = () => {
   };
 
   const resetForm = () => {
-    // Use the SELECTED month and year from dropdowns, not current date
     const monthToUse = selectedMonth === 'all' ? new Date().toLocaleString('default', { month: 'long' }) : selectedMonth;
-    
-    // Get auto-populated investment amount
     const monthlyInvestmentAmount = (window as any).__MONTHLY_INVESTMENT__ || 0;
     
     setFormData({
       month: monthToUse,
       year: selectedYear,
-      salary: profile?.monthly_salary || 0, // Pre-fill with profile salary but allow editing
-      other_income: profile?.other_income || 0, // Pre-fill with profile other income
-      rent: 0,
-      food: 0,
-      transport: 0,
-      utilities: 0,
-      entertainment: 0,
-      credit_card: 0,
-      investments: monthlyInvestmentAmount, // ✅ AUTO-POPULATED from active investments!
-      emergency_fund: 0,
-      notes: '',
+      salary: profile?.monthly_salary || 0,
+      other_income: profile?.other_income || 0,
+      rent: 0, food: 0, transport: 0, utilities: 0, entertainment: 0, credit_card: 0,
+      investments: monthlyInvestmentAmount,
+      emergency_fund: 0, notes: '',
     });
     setEditingId(null);
   };
@@ -178,655 +167,395 @@ const ImprovedMonthlyTracker: React.FC = () => {
     return record.month === selectedMonth && record.year === selectedYear;
   });
 
-  const currencySymbol = profile?.currency === 'INR' ? '₹' : profile?.currency === 'EUR' ? '€' : profile?.currency === 'GBP' ? '£' : '$';
-
+  const currencySymbol = profile?.currency === 'INR' ? '₹' : '$';
   const years = Array.from(new Set(records.map(r => r.year))).sort((a, b) => b - a);
-  if (!years.includes(new Date().getFullYear())) {
-    years.unshift(new Date().getFullYear());
-  }
+  if (!years.includes(new Date().getFullYear())) years.unshift(new Date().getFullYear());
 
-  // Calculate totals
+  // === ANALYTICS & CALCULATIONS ===
   const totalIncome = filteredRecords.reduce((sum, r) => sum + r.total_income, 0);
   const totalLoanPayments = filteredRecords.reduce((sum, r) => sum + r.total_loan_payment, 0);
   const totalExpenses = filteredRecords.reduce((sum, r) => sum + r.other_expenses, 0);
   const totalInvestments = filteredRecords.reduce((sum, r) => sum + (r.investments || 0), 0);
+  const totalCreditCard = filteredRecords.reduce((sum, r) => sum + (r.credit_card || 0), 0);
   const totalEmergencyFund = filteredRecords.reduce((sum, r) => sum + (r.emergency_fund || 0), 0);
-  const totalSavings = filteredRecords.reduce((sum, r) => sum + r.savings, 0);
+  
+  // Specific Category Totals for Analysis
+  const totalRent = filteredRecords.reduce((sum, r) => sum + (r.rent || 0), 0);
+  const totalFood = filteredRecords.reduce((sum, r) => sum + (r.food || 0), 0);
+  const totalTransport = filteredRecords.reduce((sum, r) => sum + (r.transport || 0), 0);
+  const totalEntertainment = filteredRecords.reduce((sum, r) => sum + (r.entertainment || 0), 0);
+  const totalUtilities = filteredRecords.reduce((sum, r) => sum + (r.utilities || 0), 0);
 
-  // Prepare breakdown data for single month or aggregate
-  const getBreakdownData = () => {
-    if (filteredRecords.length === 0) return [];
+  const totalOutflow = totalLoanPayments + totalExpenses + totalInvestments + totalCreditCard + totalEmergencyFund;
+  const totalSavings = totalIncome - totalOutflow;
+  const savingsRate = totalIncome > 0 ? (totalSavings / totalIncome) * 100 : 0;
+
+  // Percentage Calculations for Progress Bars
+  const pLoan = totalIncome > 0 ? (totalLoanPayments / totalIncome) * 100 : 0;
+  const pCC = totalIncome > 0 ? (totalCreditCard / totalIncome) * 100 : 0;
+  const pLiving = totalIncome > 0 ? ((totalRent + totalFood + totalTransport + totalUtilities) / totalIncome) * 100 : 0;
+  const pFun = totalIncome > 0 ? (totalEntertainment / totalIncome) * 100 : 0;
+  const pInv = totalIncome > 0 ? (totalInvestments / totalIncome) * 100 : 0;
+  const pSave = totalIncome > 0 ? (Math.max(0, totalSavings) / totalIncome) * 100 : 0;
+
+  // Health Logic
+  const getRecommendations = () => {
+    const recs = [];
+    if (savingsRate < 20) recs.push({ type: 'danger', msg: "Savings Rate Low (<20%)", tip: "Try to cut down on entertainment or dining out." });
+    else recs.push({ type: 'success', msg: "Healthy Savings Rate (>20%)", tip: "Great job! Consider increasing your SIPs." });
+
+    if (pLoan > 40) recs.push({ type: 'danger', msg: "High Debt Burden (>40%)", tip: "Your EMIs are eating up a large chunk of income. Avoid new loans." });
     
-    return [
-      { name: 'Loan EMI', value: totalLoanPayments, color: '#ef4444', percent: (totalLoanPayments/totalIncome*100).toFixed(1) },
-      { name: 'Expenses', value: totalExpenses, color: '#f97316', percent: (totalExpenses/totalIncome*100).toFixed(1) },
-      { name: 'Investments', value: totalInvestments, color: '#3b82f6', percent: (totalInvestments/totalIncome*100).toFixed(1) },
-      { name: 'Emergency Fund', value: totalEmergencyFund, color: '#22c55e', percent: (totalEmergencyFund/totalIncome*100).toFixed(1) },
-      { name: 'Savings', value: totalSavings, color: '#8b5cf6', percent: (totalSavings/totalIncome*100).toFixed(1) },
-    ].filter(item => item.value > 0);
+    if (totalEmergencyFund === 0) recs.push({ type: 'warning', msg: "No Emergency Fund Added", tip: "Start small. Even ₹5,000/month helps build a safety net." });
+    
+    if (pFun > 15) recs.push({ type: 'warning', msg: "High Lifestyle Spend (>15%)", tip: "You're spending a lot on fun/entertainment. Is this sustainable?" });
+
+    return recs;
   };
 
-  const breakdownData = getBreakdownData();
+  const recommendations = getRecommendations();
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
+  // Donut Data
+  const donutData = [
+    { name: 'Needs (Living)', value: totalRent + totalFood + totalUtilities + totalTransport, color: '#f97316' }, // Orange
+    { name: 'Wants (Fun)', value: totalEntertainment + totalCreditCard, color: '#a855f7' }, // Purple
+    { name: 'Debts (EMI)', value: totalLoanPayments, color: '#ef4444' }, // Red
+    { name: 'Future (Save)', value: totalInvestments + totalEmergencyFund + Math.max(0, totalSavings), color: '#22c55e' } // Green
+  ].filter(d => d.value > 0);
+
+  if (loading) return <div className="flex justify-center items-center h-screen"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div></div>;
 
   return (
-    <div className="min-h-screen bg-background py-6">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background pb-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
         {/* Header */}
-        <div className="mb-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h1 className="text-4xl font-extrabold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">💰 Monthly Financial Tracker</h1>
-              <p className="mt-2 text-base text-gray-700 dark:text-gray-300 font-medium">Track income, loans, investments, expenses & build wealth</p>
-            </div>
-            
-            <div className="flex items-center gap-3">
-              <select
-                className="px-4 py-2 border border-gray-300 rounded-lg bg-card text-sm font-medium"
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
-              >
-                <option value="all">All Months</option>
-                {months.map((month) => (
-                  <option key={month} value={month}>{month}</option>
-                ))}
-              </select>
-
-              <select
-                className="px-4 py-2 border border-gray-300 rounded-lg bg-card text-sm font-medium"
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-              >
-                {years.map((year) => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </select>
-
-              <button
-                onClick={() => { 
-                  if (showAddForm) {
-                    setShowAddForm(false);
-                    resetForm();
-                  } else {
-                    resetForm(); // Pre-fill with profile data
-                    setShowAddForm(true);
-                  }
-                }}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
-              >
-                {showAddForm ? 'Cancel' : '+ Add Record'}
-              </button>
-            </div>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent flex items-center gap-2">
+              <Activity className="h-8 w-8 text-blue-600" />
+              Monthly Tracker
+            </h1>
+            <p className="text-muted-foreground mt-1">Income Analysis • Expenses • Savings</p>
+          </div>
+          
+          <div className="flex flex-wrap items-center gap-3">
+            <select 
+              className="px-4 py-2 rounded-lg border bg-card text-foreground font-medium"
+              value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}
+            >
+              <option value="all">📅 All Months</option>
+              {months.map(m => <option key={m} value={m}>{m}</option>)}
+            </select>
+            <select 
+              className="px-4 py-2 rounded-lg border bg-card text-foreground font-medium"
+              value={selectedYear} onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+            >
+              {years.map(y => <option key={y} value={y}>{y}</option>)}
+            </select>
+            <button
+              onClick={() => { setShowAddForm(!showAddForm); if(!showAddForm) resetForm(); }}
+              className="btn-premium flex items-center gap-2"
+            >
+              {showAddForm ? 'Cancel' : <><Plus size={18} /> Add Record</>}
+            </button>
           </div>
         </div>
 
-        {/* Add/Edit Form */}
+        {/* ==================== ADD/EDIT FORM ==================== */}
         {showAddForm && (
-          <div className="bg-card rounded-lg shadow-sm border border-border p-6 mb-6">
-            <div className="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 p-4 mb-6">
-              <p className="text-sm font-medium text-blue-800 dark:text-blue-300">
-                📅 Adding record for: <strong>{formData.month} {formData.year}</strong>
-              </p>
-              <p className="text-xs text-blue-600 mt-1">
-                You can change the month/year in the form below if needed
-              </p>
-            </div>
-            <h2 className="text-lg font-semibold text-foreground mb-6">{editingId ? 'Edit Record' : 'Add New Record'}</h2>
-            <form onSubmit={handleSubmit}>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Month</label>
-                  <select className="w-full px-4 py-2 border border-gray-300 rounded-lg" value={formData.month}
-                    onChange={(e) => setFormData({ ...formData, month: e.target.value })} required>
-                    {months.map((month) => (<option key={month} value={month}>{month}</option>))}
-                  </select>
+          <div className="bg-card border border-border rounded-xl shadow-lg p-6 mb-8 animate-in slide-in-from-top-4">
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Receipt size={20}/> {editingId ? 'Edit Record' : 'Add New Record'}</h2>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="p-4 rounded-xl border bg-green-50/50 dark:bg-green-900/10 border-green-100 col-span-2">
+                  <h3 className="font-semibold text-green-700 dark:text-green-400 mb-3 flex gap-2 items-center"><DollarSign size={16}/> Income</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div><label className="text-xs font-medium">Salary</label><input type="number" className="input-premium" value={formData.salary} onChange={e => setFormData({...formData, salary: parseFloat(e.target.value) || 0})} /></div>
+                    <div><label className="text-xs font-medium">Other</label><input type="number" className="input-premium" value={formData.other_income} onChange={e => setFormData({...formData, other_income: parseFloat(e.target.value) || 0})} /></div>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Year</label>
-                  <input type="number" className="w-full px-4 py-2 border border-gray-300 rounded-lg" value={formData.year}
-                    onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) })} required />
+                <div className="p-4 rounded-xl border bg-orange-50/50 dark:bg-orange-900/10 border-orange-100 col-span-2">
+                  <h3 className="font-semibold text-orange-700 dark:text-orange-400 mb-3 flex gap-2 items-center"><Home size={16}/> Living</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div><label className="text-xs font-medium">Rent</label><input type="number" className="input-premium" value={formData.rent} onChange={e => setFormData({...formData, rent: parseFloat(e.target.value) || 0})} /></div>
+                    <div><label className="text-xs font-medium">Food</label><input type="number" className="input-premium" value={formData.food} onChange={e => setFormData({...formData, food: parseFloat(e.target.value) || 0})} /></div>
+                    <div><label className="text-xs font-medium">Travel</label><input type="number" className="input-premium" value={formData.transport} onChange={e => setFormData({...formData, transport: parseFloat(e.target.value) || 0})} /></div>
+                    <div><label className="text-xs font-medium">Utils</label><input type="number" className="input-premium" value={formData.utilities} onChange={e => setFormData({...formData, utilities: parseFloat(e.target.value) || 0})} /></div>
+                  </div>
                 </div>
-                <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200">
-                  <p className="text-xs text-muted-foreground mb-1">Total Income</p>
-                  <p className="text-xl font-bold text-green-600">{currencySymbol} {((formData.salary || 0) + (formData.other_income || 0)).toLocaleString()}</p>
+                <div className="p-4 rounded-xl border bg-purple-50/50 dark:bg-purple-900/10 border-purple-100 col-span-2">
+                  <h3 className="font-semibold text-purple-700 dark:text-purple-400 mb-3 flex gap-2 items-center"><Target size={16}/> Lifestyle</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div><label className="text-xs font-medium">Fun/Ent</label><input type="number" className="input-premium" value={formData.entertainment} onChange={e => setFormData({...formData, entertainment: parseFloat(e.target.value) || 0})} /></div>
+                    <div><label className="text-xs font-medium">Cards</label><input type="number" className="input-premium" value={formData.credit_card} onChange={e => setFormData({...formData, credit_card: parseFloat(e.target.value) || 0})} /></div>
+                  </div>
                 </div>
-
-                <div className="md:col-span-3 border-t pt-4">
-                  <h3 className="text-sm font-semibold text-foreground mb-1">💰 Income</h3>
-                  <p className="text-xs text-muted-foreground mb-3">💡 <strong>Note:</strong> Salary is pre-filled from your profile but can be edited if it changed this month</p>
+                <div className="p-4 rounded-xl border bg-blue-50/50 dark:bg-blue-900/10 border-blue-100 col-span-2">
+                  <h3 className="font-semibold text-blue-700 dark:text-blue-400 mb-3 flex gap-2 items-center"><TrendingUp size={16}/> Future</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div><label className="text-xs font-medium">Invest</label><input type="number" className="input-premium" value={formData.investments} onChange={e => setFormData({...formData, investments: parseFloat(e.target.value) || 0})} /></div>
+                    <div><label className="text-xs font-medium">E-Fund</label><input type="number" className="input-premium" value={formData.emergency_fund} onChange={e => setFormData({...formData, emergency_fund: parseFloat(e.target.value) || 0})} /></div>
+                  </div>
                 </div>
-                <div><label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Salary</label>
-                  <input type="number" className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Monthly salary"
-                    value={formData.salary || ''} onChange={(e) => setFormData({ ...formData, salary: parseFloat(e.target.value) || 0 })} required /></div>
-                <div><label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Other Income</label>
-                  <input type="number" className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Freelance, etc."
-                    value={formData.other_income || ''} onChange={(e) => setFormData({ ...formData, other_income: parseFloat(e.target.value) || 0 })} /></div>
-
-                <div className="md:col-span-3 border-t pt-4"><h3 className="text-sm font-semibold text-foreground mb-3">💳 Expenses</h3></div>
-                <div><label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">🏠 Rent</label>
-                  <input type="number" className="w-full px-4 py-2 border border-gray-300 rounded-lg" value={formData.rent || ''}
-                    onChange={(e) => setFormData({ ...formData, rent: parseFloat(e.target.value) || 0 })} /></div>
-                <div><label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">🍔 Food</label>
-                  <input type="number" className="w-full px-4 py-2 border border-gray-300 rounded-lg" value={formData.food || ''}
-                    onChange={(e) => setFormData({ ...formData, food: parseFloat(e.target.value) || 0 })} /></div>
-                <div><label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">🚗 Transport</label>
-                  <input type="number" className="w-full px-4 py-2 border border-gray-300 rounded-lg" value={formData.transport || ''}
-                    onChange={(e) => setFormData({ ...formData, transport: parseFloat(e.target.value) || 0 })} /></div>
-                <div><label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">💡 Utilities</label>
-                  <input type="number" className="w-full px-4 py-2 border border-gray-300 rounded-lg" value={formData.utilities || ''}
-                    onChange={(e) => setFormData({ ...formData, utilities: parseFloat(e.target.value) || 0 })} /></div>
-                <div><label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">🎬 Entertainment</label>
-                  <input type="number" className="w-full px-4 py-2 border border-gray-300 rounded-lg" value={formData.entertainment || ''}
-                    onChange={(e) => setFormData({ ...formData, entertainment: parseFloat(e.target.value) || 0 })} /></div>
-                <div><label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">💳 Credit Card</label>
-                  <input type="number" className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="CC payments"
-                    value={formData.credit_card || ''} onChange={(e) => setFormData({ ...formData, credit_card: parseFloat(e.target.value) || 0 })} /></div>
-
-                <div className="md:col-span-3 border-t pt-4">
-                  <h3 className="text-sm font-semibold text-foreground mb-1">💎 Savings & Investments</h3>
-                  <p className="text-xs text-muted-foreground mb-3">💡 <strong>Auto-populated:</strong> Investment amount is pre-filled from your active investments in the Investments page, but you can edit it if needed</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">📈 Investments (SIP/ESPP/MF)</label>
-                  <input type="number" className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-blue-50 dark:bg-blue-900/20" placeholder="Auto-filled from Investments"
-                    value={formData.investments || ''} onChange={(e) => setFormData({ ...formData, investments: parseFloat(e.target.value) || 0 })} />
-                  <p className="text-xs text-muted-foreground mt-1">✅ Auto-populated: ₹{((window as any).__MONTHLY_INVESTMENT__ || 0).toLocaleString()} (editable)</p>
-                </div>
-                <div><label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">🛡️ Emergency Fund</label>
-                  <input type="number" className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Emergency savings"
-                    value={formData.emergency_fund || ''} onChange={(e) => setFormData({ ...formData, emergency_fund: parseFloat(e.target.value) || 0 })} /></div>
-
-                <div className="md:col-span-3"><label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Notes</label>
-                  <textarea className="w-full px-4 py-2 border border-gray-300 rounded-lg" rows={2} value={formData.notes}
-                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })} /></div>
               </div>
-
-              <div className="mt-6 flex gap-3">
-                <button type="submit" className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700">
-                  {editingId ? 'Update Record' : 'Save Record'}
-                </button>
-                <button type="button" onClick={() => { setShowAddForm(false); resetForm(); }}
-                  className="px-6 py-2 bg-gray-100 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-200">Cancel</button>
-              </div>
+              <div className="flex justify-end gap-3"><button type="button" onClick={() => setShowAddForm(false)} className="btn-secondary-premium">Cancel</button><button type="submit" className="btn-premium">Save Record</button></div>
             </form>
           </div>
         )}
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
-          <div className="bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-xl shadow-xl p-5 hover:scale-105 transition-transform">
-            <p className="text-xs opacity-90 mb-1 font-semibold">💵 Total Income</p>
-            <p className="text-3xl font-extrabold">{currencySymbol}{totalIncome.toLocaleString()}</p>
-          </div>
-          <div className="bg-gradient-to-br from-red-500 to-rose-600 text-white rounded-xl shadow-xl p-5 hover:scale-105 transition-transform">
-            <p className="text-xs opacity-90 mb-1 font-semibold">🏦 Loan EMI</p>
-            <p className="text-3xl font-extrabold">{currencySymbol}{totalLoanPayments.toLocaleString()}</p>
-          </div>
-          <div className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-xl shadow-xl p-5 hover:scale-105 transition-transform">
-            <p className="text-xs opacity-90 mb-1 font-semibold">📈 Investments</p>
-            <p className="text-3xl font-extrabold">{currencySymbol}{totalInvestments.toLocaleString()}</p>
-          </div>
-          <div className="bg-gradient-to-br from-orange-500 to-amber-600 text-white rounded-xl shadow-xl p-5 hover:scale-105 transition-transform">
-            <p className="text-xs opacity-90 mb-1 font-semibold">💳 Expenses</p>
-            <p className="text-3xl font-extrabold">{currencySymbol}{totalExpenses.toLocaleString()}</p>
-          </div>
-          <div className="bg-gradient-to-br from-teal-500 to-cyan-600 text-white rounded-xl shadow-xl p-5 hover:scale-105 transition-transform">
-            <p className="text-xs opacity-90 mb-1 font-semibold">🛡️ E-Fund</p>
-            <p className="text-3xl font-extrabold">{currencySymbol}{totalEmergencyFund.toLocaleString()}</p>
-          </div>
-          <div className="bg-gradient-to-br from-purple-500 to-violet-600 text-white rounded-xl shadow-xl p-5 hover:scale-105 transition-transform">
-            <p className="text-xs opacity-90 mb-1 font-semibold">💰 Savings</p>
-            <p className="text-3xl font-extrabold">{currencySymbol}{totalSavings.toLocaleString()}</p>
-          </div>
-        </div>
-
-        {/* Current Month At-a-Glance */}
-        <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl shadow-xl border-2 border-indigo-200 p-6 mb-6">
-          <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center">
-            <span className="mr-3">💎</span>
-            This Month At-a-Glance
-          </h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Income Side */}
-            <div className="bg-card rounded-xl p-5 shadow">
-              <h3 className="text-lg font-semibold text-green-600 mb-4">💰 Money Coming In</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-700 dark:text-gray-300">Salary</span>
-                  <span className="text-xl font-bold text-green-600">{currencySymbol}{(profile?.monthly_salary || 0).toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-700 dark:text-gray-300">Other Income</span>
-                  <span className="text-xl font-bold text-green-600">{currencySymbol}{(profile?.other_income || 0).toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between items-center pt-3 border-t-2 border-green-200">
-                  <span className="font-bold text-foreground">Total</span>
-                  <span className="text-2xl font-extrabold text-green-600">{currencySymbol}{((profile?.monthly_salary || 0) + (profile?.other_income || 0)).toLocaleString()}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Expenses Side */}
-            <div className="bg-card rounded-xl p-5 shadow">
-              <h3 className="text-lg font-semibold text-red-600 mb-4">💸 Money Going Out</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-700 dark:text-gray-300">🏦 Loan EMI</span>
-                  <span className="text-lg font-bold text-red-600">{currencySymbol}{loans.filter(l => l.status === 'active').reduce((s, l) => s + l.monthly_payment, 0).toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-700 dark:text-gray-300">📈 Investments (SIP/ESPP)</span>
-                  <span className="text-lg font-bold text-blue-600">{currencySymbol}{((window as any).__MONTHLY_INVESTMENT__ || 0).toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between items-center pt-3 border-t-2 border-red-200">
-                  <span className="font-bold text-foreground">Obligations</span>
-                  <span className="text-xl font-extrabold text-red-600">{currencySymbol}{(loans.filter(l => l.status === 'active').reduce((s, l) => s + l.monthly_payment, 0) + ((window as any).__MONTHLY_INVESTMENT__ || 0)).toLocaleString()}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* In Hand Money */}
-          <div className="mt-6 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl p-6 shadow-lg">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-sm opacity-90 mb-1">💵 Money Available After Obligations</p>
-                <p className="text-xs opacity-80">Income - (Loans + Investments)</p>
-              </div>
-              <p className="text-4xl font-extrabold">
-                {currencySymbol}{(
-                  ((profile?.monthly_salary || 0) + (profile?.other_income || 0)) - 
-                  loans.filter(l => l.status === 'active').reduce((s, l) => s + l.monthly_payment, 0) - 
-                  ((window as any).__MONTHLY_INVESTMENT__ || 0)
-                ).toLocaleString()}
-              </p>
-            </div>
-            <p className="text-xs mt-3 opacity-90">
-              ✨ This is what you have left for expenses, emergency fund, and additional savings after paying loans and investments
-            </p>
-          </div>
-        </div>
-
-        {/* Detailed Breakdown Section */}
-        {filteredRecords.length > 0 && (
-          <>
-            {/* Income Flow Breakdown */}
-            <div className="bg-card rounded-lg shadow-sm border border-border p-6 mb-6">
-              <h3 className="text-lg font-semibold text-foreground mb-4">💰 Income Flow Breakdown</h3>
-              <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Total Income</span>
-                    <span className="text-lg font-bold text-green-600">{currencySymbol} {totalIncome.toLocaleString()}</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3">
-                    <div className="bg-green-50 dark:bg-green-900/200 h-3 rounded-full" style={{width: '100%'}}></div>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Loan EMI (-)</span>
-                    <span className="text-lg font-bold text-red-600">- {currencySymbol} {totalLoanPayments.toLocaleString()} ({(totalLoanPayments/totalIncome*100).toFixed(1)}%)</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3">
-                    <div className="bg-red-50 dark:bg-red-900/200 h-3 rounded-full" style={{width: `${(totalLoanPayments/totalIncome*100)}%`}}></div>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Investments (-)</span>
-                    <span className="text-lg font-bold text-blue-600">- {currencySymbol} {((window as any).__MONTHLY_INVESTMENT__ || totalInvestments).toLocaleString()} ({(((window as any).__MONTHLY_INVESTMENT__ || totalInvestments)/totalIncome*100).toFixed(1)}%)</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3">
-                    <div className="bg-blue-50 dark:bg-blue-900/200 h-3 rounded-full" style={{width: `${(((window as any).__MONTHLY_INVESTMENT__ || totalInvestments)/totalIncome*100)}%`}}></div>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Other Expenses (-)</span>
-                    <span className="text-lg font-bold text-orange-600">- {currencySymbol} {totalExpenses.toLocaleString()} ({(totalExpenses/totalIncome*100).toFixed(1)}%)</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3">
-                    <div className="bg-orange-50 dark:bg-orange-900/200 h-3 rounded-full" style={{width: `${(totalExpenses/totalIncome*100)}%`}}></div>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Emergency Fund (-)</span>
-                    <span className="text-lg font-bold text-green-600">- {currencySymbol} {totalEmergencyFund.toLocaleString()} ({(totalEmergencyFund/totalIncome*100).toFixed(1)}%)</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3">
-                    <div className="bg-green-50 dark:bg-green-900/200 h-3 rounded-full" style={{width: `${(totalEmergencyFund/totalIncome*100)}%`}}></div>
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t-2 border-gray-300">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-bold text-foreground">Net Savings / Remaining</span>
-                    <span className="text-xl font-bold text-purple-600">
-                      {currencySymbol} {(totalIncome - totalLoanPayments - ((window as any).__MONTHLY_INVESTMENT__ || totalInvestments) - totalExpenses - totalEmergencyFund).toLocaleString()} 
-                      ({((totalIncome - totalLoanPayments - ((window as any).__MONTHLY_INVESTMENT__ || totalInvestments) - totalExpenses - totalEmergencyFund)/totalIncome*100).toFixed(1)}%)
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-4">
-                    <div className="bg-gradient-to-r from-purple-500 to-violet-600 h-4 rounded-full" style={{width: `${((totalIncome - totalLoanPayments - ((window as any).__MONTHLY_INVESTMENT__ || totalInvestments) - totalExpenses - totalEmergencyFund)/totalIncome*100)}%`}}></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Loan Breakdown Section */}
-            {loans.filter(l => l.status === 'active').length > 0 && (
-              <div className="bg-card rounded-lg shadow-sm border border-border p-6 mb-6">
-                <h3 className="text-lg font-semibold text-foreground mb-4">💳 Active Loans Breakdown</h3>
-                <p className="text-sm text-muted-foreground mb-4">Here are all your active loans and their monthly payments that are automatically deducted from your income.</p>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                  {loans.filter(l => l.status === 'active').map((loan) => (
-                    <div key={loan.id} className="border-2 border-blue-200 rounded-lg p-4 bg-blue-50 dark:bg-blue-900/20">
-                      <div className="flex justify-between items-start mb-2">
-                        <h4 className="font-bold text-foreground">{loan.name}</h4>
-                        <span className="px-2 py-1 bg-blue-600 text-white text-xs rounded-full">Active</span>
-                      </div>
-                      <div className="space-y-1 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Type:</span>
-                          <span className="font-medium capitalize">{loan.type.replace('_', ' ')}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Principal:</span>
-                          <span className="font-bold text-blue-600">{currencySymbol}{loan.principal.toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Interest:</span>
-                          <span className="font-medium">{loan.interest_rate}%</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Tenure:</span>
-                          <span className="font-medium">{loan.tenure} months</span>
-                        </div>
-                        <div className="flex justify-between border-t pt-2 mt-2">
-                          <span className="text-foreground font-semibold">Monthly EMI:</span>
-                          <span className="text-lg font-bold text-red-600">{currencySymbol}{loan.monthly_payment.toLocaleString()}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Loan Impact on Budget */}
-                <div className="bg-gradient-to-r from-red-50 to-orange-50 border-l-4 border-red-500 p-4 rounded-lg">
-                  <h4 className="font-bold text-foreground mb-3">📊 Loan Impact on Your Budget</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                    <div>
-                      <p className="text-muted-foreground mb-1">Total Loan EMI</p>
-                      <p className="text-2xl font-bold text-red-600">{currencySymbol}{totalLoanPayments.toLocaleString()}</p>
-                      <p className="text-xs text-muted-foreground mt-1">Per month</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground mb-1">% of Income</p>
-                      <p className="text-2xl font-bold text-orange-600">{(totalLoanPayments/totalIncome*100).toFixed(1)}%</p>
-                      <p className="text-xs text-muted-foreground mt-1">{(totalLoanPayments/totalIncome*100) > 40 ? '🚨 High!' : (totalLoanPayments/totalIncome*100) > 30 ? '⚠️ Moderate' : '✅ Healthy'}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground mb-1">Active Loans</p>
-                      <p className="text-2xl font-bold text-blue-600">{loans.filter(l => l.status === 'active').length}</p>
-                      <p className="text-xs text-muted-foreground mt-1">Total loans</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Loan Comparison Chart */}
-                <div className="mt-6">
-                  <h4 className="font-bold text-foreground mb-3">📈 Monthly Loan Payment Distribution</h4>
-                  <ResponsiveContainer width="100%" height={250}>
-                    <BarChart
-                      data={loans.filter(l => l.status === 'active').map(loan => ({
-                        name: loan.name.length > 15 ? loan.name.substring(0, 15) + '...' : loan.name,
-                        EMI: loan.monthly_payment,
-                      }))}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
-                      <YAxis />
-                      <Tooltip formatter={(value: number) => `${currencySymbol}${value.toLocaleString()}`} />
-                      <Bar dataKey="EMI" fill="#ef4444" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            )}
-
-            {/* Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-              {/* Pie Chart */}
-              <div className="bg-card rounded-lg shadow-sm border border-border p-6">
-                <h3 className="text-lg font-semibold text-foreground mb-4">📊 Where Your Money Goes</h3>
-                {breakdownData.length > 0 ? (
-                  <>
-                    <ResponsiveContainer width="100%" height={250}>
-                      <PieChart>
-                        <Pie
-                          data={breakdownData}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          label={(props: any) => `${props.name}: ${props.percent}%`}
-                          outerRadius={90}
-                          fill="#8884d8"
-                          dataKey="value"
-                        >
-                          {breakdownData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip formatter={(value: any) => `${currencySymbol}${value.toLocaleString()}`} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                    <div className="mt-4 grid grid-cols-2 gap-2">
-                      {breakdownData.map((item, index) => (
-                        <div key={index} className="flex items-center text-sm">
-                          <div className="w-3 h-3 rounded-full mr-2" style={{backgroundColor: item.color}}></div>
-                          <span className="text-gray-700 dark:text-gray-300">{item.name}: {item.percent}%</span>
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                ) : (
-                  <p className="text-muted-foreground text-center py-8">No data to display</p>
-                )}
-              </div>
-
-              {/* Expense Breakdown Bar Chart */}
-              <div className="bg-card rounded-lg shadow-sm border border-border p-6">
-                <h3 className="text-lg font-semibold text-foreground mb-4">📊 Expense Breakdown Comparison</h3>
-                {filteredRecords.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={250}>
-                    <BarChart data={filteredRecords.map(r => ({
-                      name: `${r.month.substring(0, 3)} ${r.year}`,
-                      'Rent': r.rent || 0,
-                      'Food': r.food || 0,
-                      'Transport': r.transport || 0,
-                      'Utilities': r.utilities || 0,
-                      'Entertainment': r.entertainment || 0,
-                      'Credit Card': r.credit_card || 0,
-                    }))}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis tickFormatter={(value) => `${currencySymbol}${(value/1000).toFixed(0)}k`} />
-                      <Tooltip 
-                        formatter={(value: any) => `${currencySymbol}${value.toLocaleString()}`}
-                        contentStyle={{ backgroundColor: 'white', border: '1px solid #ccc' }}
-                      />
-                      <Legend />
-                      <Bar dataKey="Rent" stackId="a" fill="#f97316" />
-                      <Bar dataKey="Food" stackId="a" fill="#fb923c" />
-                      <Bar dataKey="Transport" stackId="a" fill="#fdba74" />
-                      <Bar dataKey="Utilities" stackId="a" fill="#fed7aa" />
-                      <Bar dataKey="Entertainment" stackId="a" fill="#ffedd5" />
-                      <Bar dataKey="Credit Card" stackId="a" fill="#a855f7" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <p className="text-muted-foreground text-center py-8">No data to display</p>
-                )}
-              </div>
-            </div>
-
-            {/* Insights Section */}
-            <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border-2 border-blue-200 p-6 mb-6">
-              <h3 className="text-lg font-semibold text-foreground mb-4">💡 Financial Insights & Planning</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-card p-4 rounded-lg">
-                  <h4 className="font-semibold text-foreground mb-2">📊 Savings Rate</h4>
-                  <p className="text-2xl font-bold text-purple-600">{totalIncome > 0 ? (totalSavings/totalIncome*100).toFixed(1) : 0}%</p>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    {(totalSavings/totalIncome*100) >= 20 ? '✅ Great! Target: 20%+' : 
-                     (totalSavings/totalIncome*100) >= 10 ? '⚠️ Good start. Try to reach 20%' : 
-                     '🚨 Too low. Try to save at least 10%'}
-                  </p>
-                </div>
-
-                <div className="bg-card p-4 rounded-lg">
-                  <h4 className="font-semibold text-foreground mb-2">💳 Debt Burden</h4>
-                  <p className="text-2xl font-bold text-red-600">{totalIncome > 0 ? (totalLoanPayments/totalIncome*100).toFixed(1) : 0}%</p>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    {(totalLoanPayments/totalIncome*100) < 30 ? '✅ Healthy level' : 
-                     (totalLoanPayments/totalIncome*100) < 40 ? '⚠️ Monitor closely' : 
-                     '🚨 Too high! Focus on reducing debt'}
-                  </p>
-                </div>
-
-                <div className="bg-card p-4 rounded-lg">
-                  <h4 className="font-semibold text-foreground mb-2">📈 Investment Rate</h4>
-                  <p className="text-2xl font-bold text-blue-600">{totalIncome > 0 ? (totalInvestments/totalIncome*100).toFixed(1) : 0}%</p>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    {(totalInvestments/totalIncome*100) >= 15 ? '✅ Excellent!' : 
-                     (totalInvestments/totalIncome*100) >= 10 ? '✅ Good! Try 15%' : 
-                     '📊 Target: 10-15% of income'}
-                  </p>
-                </div>
-
-                <div className="bg-card p-4 rounded-lg">
-                  <h4 className="font-semibold text-foreground mb-2">🛡️ Emergency Fund</h4>
-                  <p className="text-2xl font-bold text-green-600">{currencySymbol}{totalEmergencyFund.toLocaleString()}</p>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Target: 6 months expenses = {currencySymbol}{((totalLoanPayments + totalExpenses) * 6).toLocaleString()}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* Records Table */}
-        <div className="bg-card rounded-lg shadow-sm border border-border">
-          <div className="px-6 py-4 border-b border-border">
-            <h2 className="text-lg font-semibold text-foreground">
-              📋 Records {selectedMonth !== 'all' ? `- ${selectedMonth} ${selectedYear}` : `- ${selectedYear}`}
+        {/* ==================== 1. INCOME VISUALIZER ==================== */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          {/* Main Utilization Card */}
+          <div className="lg:col-span-2 bg-card border border-border rounded-xl shadow-md p-6">
+            <h2 className="text-lg font-bold mb-6 flex items-center gap-2">
+              <PieChartIcon className="text-primary"/> Where is your Money Going?
             </h2>
+            
+            {/* Total Income Stacked Bar */}
+            <div className="mb-8">
+              <div className="flex justify-between text-sm font-medium mb-2">
+                <span>Income Utilization</span>
+                <span className="text-muted-foreground">{totalOutflow.toLocaleString()} / {totalIncome.toLocaleString()}</span>
+              </div>
+              <div className="h-8 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden flex shadow-inner border border-gray-200 dark:border-gray-700">
+                {pLoan > 0 && <div style={{width: `${pLoan}%`}} className="bg-red-500 h-full flex items-center justify-center text-[10px] text-white font-bold" title="Loans">EMI</div>}
+                {pCC > 0 && <div style={{width: `${pCC}%`}} className="bg-purple-500 h-full flex items-center justify-center text-[10px] text-white font-bold" title="Credit Card">CC</div>}
+                {pLiving > 0 && <div style={{width: `${pLiving}%`}} className="bg-orange-500 h-full flex items-center justify-center text-[10px] text-white font-bold" title="Living">Live</div>}
+                {pFun > 0 && <div style={{width: `${pFun}%`}} className="bg-pink-500 h-full flex items-center justify-center text-[10px] text-white font-bold" title="Fun">Fun</div>}
+                {pInv > 0 && <div style={{width: `${pInv}%`}} className="bg-blue-500 h-full flex items-center justify-center text-[10px] text-white font-bold" title="Investments">Inv</div>}
+                {pSave > 0 && <div style={{width: `${pSave}%`}} className="bg-green-500 h-full flex items-center justify-center text-[10px] text-white font-bold" title="Savings">Sav</div>}
+              </div>
+            </div>
+
+            {/* Individual Breakdown Bars */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+              {/* EMI */}
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="flex items-center gap-2"><TrendingDown size={14} className="text-red-500"/> Loan EMI</span>
+                  <span className="font-bold text-red-600">{currencySymbol}{totalLoanPayments.toLocaleString()}</span>
+                </div>
+                <div className="h-2 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden"><div style={{width: `${pLoan}%`}} className="bg-red-500 h-full rounded-full"/></div>
+              </div>
+
+              {/* Credit Card */}
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="flex items-center gap-2"><CreditCard size={14} className="text-purple-500"/> Credit Card</span>
+                  <span className="font-bold text-purple-600">{currencySymbol}{totalCreditCard.toLocaleString()}</span>
+                </div>
+                <div className="h-2 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden"><div style={{width: `${pCC}%`}} className="bg-purple-500 h-full rounded-full"/></div>
+              </div>
+
+              {/* Living Expenses */}
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="flex items-center gap-2"><Home size={14} className="text-orange-500"/> Living (Rent/Food)</span>
+                  <span className="font-bold text-orange-600">{currencySymbol}{(totalRent+totalFood+totalUtilities+totalTransport).toLocaleString()}</span>
+                </div>
+                <div className="h-2 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden"><div style={{width: `${pLiving}%`}} className="bg-orange-500 h-full rounded-full"/></div>
+              </div>
+
+              {/* Fun */}
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="flex items-center gap-2"><Coffee size={14} className="text-pink-500"/> Fun & Ent</span>
+                  <span className="font-bold text-pink-600">{currencySymbol}{totalEntertainment.toLocaleString()}</span>
+                </div>
+                <div className="h-2 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden"><div style={{width: `${pFun}%`}} className="bg-pink-500 h-full rounded-full"/></div>
+              </div>
+
+              {/* Investments */}
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="flex items-center gap-2"><TrendingUp size={14} className="text-blue-500"/> Investments</span>
+                  <span className="font-bold text-blue-600">{currencySymbol}{totalInvestments.toLocaleString()}</span>
+                </div>
+                <div className="h-2 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden"><div style={{width: `${pInv}%`}} className="bg-blue-500 h-full rounded-full"/></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Money Left / Savings Card */}
+          <div className="bg-gradient-to-br from-green-600 to-emerald-700 rounded-xl shadow-lg p-6 text-white flex flex-col justify-between relative overflow-hidden">
+            <div className="relative z-10">
+              <h3 className="text-emerald-100 font-medium mb-1">Net Savings / Money Left</h3>
+              <p className="text-xs text-emerald-200 mb-6">Calculated after Loans, CC, Bills & Investments</p>
+              
+              <div className="text-5xl font-extrabold tracking-tight">
+                {currencySymbol}{totalSavings.toLocaleString()}
+              </div>
+              {totalSavings < 0 && <div className="mt-2 bg-red-500/20 border border-red-400/50 rounded px-2 py-1 text-xs font-bold inline-block">DEFICIT WARNING</div>}
+            </div>
+
+            <div className="mt-8 space-y-4 relative z-10">
+              <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm flex justify-between items-center">
+                <p className="text-xs text-emerald-100">Savings Rate</p>
+                <div className="text-right">
+                  <span className="text-xl font-bold">{savingsRate.toFixed(1)}%</span>
+                  <p className="text-[10px]">{savingsRate > 20 ? '🎉 Excellent' : '⚠️ Target 20%'}</p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Background decoration */}
+            <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
+          </div>
+        </div>
+
+        {/* ==================== 2. DETAILED EXPANDED TABLE ==================== */}
+        <div className="card overflow-hidden shadow-md mb-8">
+          <div className="px-6 py-4 border-b border-border bg-muted/20 flex justify-between items-center">
+            <h3 className="font-bold flex items-center gap-2"><Calendar size={18}/> Detailed Monthly Records</h3>
+            <span className="text-xs text-muted-foreground">{filteredRecords.length} records found</span>
           </div>
           
-          {filteredRecords.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-6xl mb-4">📊</div>
-              <p className="text-lg text-muted-foreground mb-2">No records found</p>
-              <p className="text-sm text-muted-foreground">Add your first record to start tracking</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-background border-b border-border">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Period</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Income</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase bg-red-50 dark:bg-red-900/20">EMI</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase bg-orange-50 dark:bg-orange-900/20">🏠 Rent</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase bg-orange-50 dark:bg-orange-900/20">🍔 Food</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase bg-orange-50 dark:bg-orange-900/20">🚗 Travel</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase bg-orange-50 dark:bg-orange-900/20">💡 Utils</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase bg-orange-50 dark:bg-orange-900/20">🎬 Fun</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase bg-purple-50 dark:bg-purple-900/20">💳 CC</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase bg-blue-50 dark:bg-blue-900/20">📈 Invest</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase bg-green-50 dark:bg-green-900/20">🛡️ E-Fund</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase bg-purple-100">💰 Left</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {filteredRecords.map((record) => (
-                    <tr key={record.id} className="hover:bg-background">
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-foreground">{record.month}</div>
-                        <div className="text-sm text-muted-foreground">{record.year}</div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/50 text-xs uppercase font-semibold text-muted-foreground">
+                <tr>
+                  <th className="px-4 py-3 text-left">Period</th>
+                  <th className="px-4 py-3 text-right text-green-600">Income</th>
+                  <th className="px-4 py-3 text-right text-red-600">EMI</th>
+                  <th className="px-4 py-3 text-right">Rent</th>
+                  <th className="px-4 py-3 text-right">Food</th>
+                  <th className="px-4 py-3 text-right">Travel</th>
+                  <th className="px-4 py-3 text-right">Utils</th>
+                  <th className="px-4 py-3 text-right text-pink-600">Fun</th>
+                  <th className="px-4 py-3 text-right text-purple-600">CC</th>
+                  <th className="px-4 py-3 text-right text-blue-600">Invest</th>
+                  <th className="px-4 py-3 text-right text-emerald-600">E-Fund</th>
+                  <th className="px-4 py-3 text-right font-bold bg-green-50/50 dark:bg-green-900/10">Leftover</th>
+                  <th className="px-4 py-3 text-center">Paid?</th>
+                  <th className="px-4 py-3 text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {filteredRecords.map(record => {
+                  const net = record.total_income - record.total_loan_payment - record.other_expenses - (record.investments||0) - (record.emergency_fund||0) - (record.credit_card||0);
+                  return (
+                    <tr key={record.id} className="hover:bg-muted/20 transition-colors">
+                      <td className="px-4 py-3 font-medium whitespace-nowrap">
+                        <div className="text-foreground">{record.month}</div>
+                        <div className="text-xs text-muted-foreground">{record.year}</div>
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-bold text-green-600">
-                        {currencySymbol}{record.total_income.toLocaleString()}
+                      <td className="px-4 py-3 text-right font-medium text-green-600">{currencySymbol}{record.total_income.toLocaleString()}</td>
+                      <td className="px-4 py-3 text-right font-medium text-red-600">{currencySymbol}{record.total_loan_payment.toLocaleString()}</td>
+                      <td className="px-4 py-3 text-right opacity-80">{currencySymbol}{(record.rent||0).toLocaleString()}</td>
+                      <td className="px-4 py-3 text-right opacity-80">{currencySymbol}{(record.food||0).toLocaleString()}</td>
+                      <td className="px-4 py-3 text-right opacity-80">{currencySymbol}{(record.transport||0).toLocaleString()}</td>
+                      <td className="px-4 py-3 text-right opacity-80">{currencySymbol}{(record.utilities||0).toLocaleString()}</td>
+                      <td className="px-4 py-3 text-right text-pink-600 font-medium">{currencySymbol}{(record.entertainment||0).toLocaleString()}</td>
+                      <td className="px-4 py-3 text-right text-purple-600 font-medium">{currencySymbol}{(record.credit_card||0).toLocaleString()}</td>
+                      <td className="px-4 py-3 text-right text-blue-600 font-medium">{currencySymbol}{(record.investments||0).toLocaleString()}</td>
+                      <td className="px-4 py-3 text-right text-emerald-600 font-medium">{currencySymbol}{(record.emergency_fund||0).toLocaleString()}</td>
+                      <td className={`px-4 py-3 text-right font-bold bg-green-50/30 dark:bg-green-900/10 ${net < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                        {currencySymbol}{net.toLocaleString()}
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium text-red-600 bg-red-50 dark:bg-red-900/20">
-                        {currencySymbol}{record.total_loan_payment.toLocaleString()}
+                      <td className="px-4 py-3 text-center">
+                        <div className="flex justify-center gap-1">
+                          <button onClick={() => togglePaid(record.id, 'rent')} className={`p-1.5 rounded-md border ${paidStatus[`${record.id}_rent`] ? 'bg-green-100 border-green-200 text-green-700' : 'bg-gray-50 border-gray-200 text-gray-400 hover:bg-gray-100'}`} title="Rent Paid">🏠</button>
+                          <button onClick={() => togglePaid(record.id, 'cc')} className={`p-1.5 rounded-md border ${paidStatus[`${record.id}_cc`] ? 'bg-purple-100 border-purple-200 text-purple-700' : 'bg-gray-50 border-gray-200 text-gray-400 hover:bg-gray-100'}`} title="Credit Card Paid">💳</button>
+                        </div>
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-right text-sm text-gray-700 dark:text-gray-300 bg-orange-50 dark:bg-orange-900/20">
-                        {currencySymbol}{(record.rent || 0).toLocaleString()}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-right text-sm text-gray-700 dark:text-gray-300 bg-orange-50 dark:bg-orange-900/20">
-                        {currencySymbol}{(record.food || 0).toLocaleString()}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-right text-sm text-gray-700 dark:text-gray-300 bg-orange-50 dark:bg-orange-900/20">
-                        {currencySymbol}{(record.transport || 0).toLocaleString()}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-right text-sm text-gray-700 dark:text-gray-300 bg-orange-50 dark:bg-orange-900/20">
-                        {currencySymbol}{(record.utilities || 0).toLocaleString()}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-right text-sm text-gray-700 dark:text-gray-300 bg-orange-50 dark:bg-orange-900/20">
-                        {currencySymbol}{(record.entertainment || 0).toLocaleString()}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium text-purple-600 bg-purple-50 dark:bg-purple-900/20">
-                        {currencySymbol}{(record.credit_card || 0).toLocaleString()}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium text-blue-600 bg-blue-50 dark:bg-blue-900/20">
-                        {currencySymbol}{(record.investments || 0).toLocaleString()}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium text-green-600 bg-green-50 dark:bg-green-900/20">
-                        {currencySymbol}{(record.emergency_fund || 0).toLocaleString()}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-bold text-purple-700 bg-purple-100">
-                        {currencySymbol}{record.savings.toLocaleString()}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm">
-                        <button onClick={() => handleEdit(record)} className="text-blue-600 hover:text-blue-800 dark:text-blue-300 font-medium mr-3">
-                          ✏️ Edit
-                        </button>
-                        <button onClick={() => handleDelete(record.id, record.month, record.year)} className="text-red-600 hover:text-red-800 dark:text-red-300 font-medium">
-                          🗑️ Delete
-                        </button>
+                      <td className="px-4 py-3 text-center whitespace-nowrap">
+                        <button onClick={() => handleEdit(record)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded mr-1"><Edit2 size={16}/></button>
+                        <button onClick={() => handleDelete(record.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded"><Trash2 size={16}/></button>
                       </td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
+
+        {/* ==================== 3. INSIGHTS & RECOMMENDATIONS ==================== */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div className="lg:col-span-2 card p-6">
+            <h3 className="font-bold mb-4 flex items-center gap-2"><TrendingUp size={18}/> 6-Month Spend Trend</h3>
+            <div className="h-[250px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={records.slice(0, 6).reverse()}>
+                  <defs>
+                    <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#22c55e" stopOpacity={0.1}/>
+                      <stop offset="95%" stopColor="#22c55e" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="month" tick={{fontSize: 12}} />
+                  <YAxis hide />
+                  <Tooltip />
+                  <Area type="monotone" dataKey="total_income" stroke="#22c55e" fill="url(#colorIncome)" strokeWidth={2}/>
+                  <Area type="monotone" dataKey="other_expenses" stroke="#f97316" fill="transparent" strokeWidth={2}/>
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div className="card p-6 bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/10 dark:to-blue-900/10 border-indigo-100">
+            <h3 className="font-bold mb-4 flex items-center gap-2 text-indigo-800 dark:text-indigo-300">
+              <Lightbulb size={18}/> Smart Recommendations
+            </h3>
+            <div className="space-y-3">
+              {recommendations.length > 0 ? recommendations.map((rec, i) => (
+                <div key={i} className={`p-3 rounded-lg border text-sm ${rec.type === 'danger' ? 'bg-red-50 border-red-200 text-red-800' : rec.type === 'warning' ? 'bg-orange-50 border-orange-200 text-orange-800' : 'bg-green-50 border-green-200 text-green-800'}`}>
+                  <p className="font-bold mb-1">{rec.msg}</p>
+                  <p className="opacity-90 text-xs">{rec.tip}</p>
+                </div>
+              )) : (
+                <div className="p-3 rounded-lg border bg-green-50 border-green-200 text-green-800 text-sm">
+                  <p className="font-bold">Everything looks good!</p>
+                  <p className="text-xs">Keep up the great financial habits.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Needs vs Wants Donut */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="card p-6">
+            <h3 className="font-bold mb-4 flex items-center gap-2"><PieChartIcon size={18}/> Needs vs Wants</h3>
+            <div className="h-[250px] flex items-center justify-center">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={donutData}
+                    cx="50%" cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {donutData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(val: number) => `${currencySymbol}${val.toLocaleString()}`} />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+          <div className="card p-6">
+            <h3 className="font-bold mb-4 flex items-center gap-2"><Activity size={18}/> Burn Rate</h3>
+            <div className="flex flex-col justify-center h-[200px] text-center">
+              <p className="text-muted-foreground text-sm mb-2">You are spending approximately</p>
+              <p className="text-4xl font-extrabold text-foreground">{currencySymbol}{((totalExpenses + totalCreditCard)/30).toFixed(0)}</p>
+              <p className="text-muted-foreground text-sm mt-2">per day on lifestyle & bills</p>
+              <div className="mt-6 p-3 bg-muted/30 rounded-lg text-xs">
+                Does not include Loans or Investments
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   );
 };
 
 export default ImprovedMonthlyTracker;
-
