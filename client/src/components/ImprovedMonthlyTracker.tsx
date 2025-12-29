@@ -4,7 +4,7 @@ import {
   AreaChart, Area
 } from 'recharts';
 import { api } from '../api';
-import { MonthlyRecord, UserProfile, Loan } from '../types';
+import { MonthlyRecord, UserProfile } from '../types';
 import { useUser } from '../UserContext';
 import { 
   TrendingUp, Receipt, Target, Plus, Edit2, Trash2, Calendar,
@@ -15,7 +15,6 @@ const ImprovedMonthlyTracker: React.FC = () => {
   const { currentUser } = useUser();
   const [records, setRecords] = useState<MonthlyRecord[]>([]);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loans, setLoans] = useState<Loan[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -61,19 +60,12 @@ const ImprovedMonthlyTracker: React.FC = () => {
   const fetchData = async () => {
     if (!currentUser) return;
     try {
-      const [recordsRes, profileRes, loansRes, investmentsRes] = await Promise.all([
+      const [recordsRes, profileRes] = await Promise.all([
         api.getMonthlyRecords(currentUser.id),
-        api.getProfile(currentUser.id),
-        api.getLoans(currentUser.id),
-        api.getInvestments(currentUser.id)
+        api.getProfile(currentUser.id)
       ]);
       setRecords(recordsRes.data);
       setProfile(profileRes.data);
-      setLoans(loansRes.data);
-      
-      const activeInvestments = investmentsRes.data.filter((inv: any) => inv.status === 'active' || inv.status === null);
-      const totalMonthlyInvestment = activeInvestments.reduce((sum: number, inv: any) => sum + inv.monthly_contribution, 0);
-      (window as any).__MONTHLY_INVESTMENT__ = totalMonthlyInvestment;
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
