@@ -8,7 +8,8 @@ import { MonthlyRecord, UserProfile } from '../types';
 import { useUser } from '../UserContext';
 import { 
   TrendingUp, Receipt, Target, Plus, Edit2, Trash2, Calendar,
-  TrendingDown, DollarSign, Activity, PieChart as PieChartIcon, Coffee, Home, Lightbulb, CreditCard
+  TrendingDown, DollarSign, Activity, PieChart as PieChartIcon, Coffee, Home, Lightbulb, CreditCard,
+  CheckCircle2, Circle
 } from 'lucide-react';
 
 const ImprovedMonthlyTracker: React.FC = () => {
@@ -259,6 +260,30 @@ const ImprovedMonthlyTracker: React.FC = () => {
           <div className="bg-card border border-border rounded-xl shadow-lg p-6 mb-8 animate-in slide-in-from-top-4">
             <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Receipt size={20}/> {editingId ? 'Edit Record' : 'Add New Record'}</h2>
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Month & Year Selection */}
+              <div className="grid grid-cols-2 gap-6 p-4 bg-muted/30 rounded-xl border border-border">
+                <div>
+                  <label className="text-xs font-bold uppercase text-muted-foreground mb-1 block">Select Month</label>
+                  <select 
+                    className="input-premium w-full" 
+                    value={formData.month} 
+                    onChange={e => setFormData({...formData, month: e.target.value})}
+                  >
+                    {months.map(m => <option key={m} value={m}>{m}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-bold uppercase text-muted-foreground mb-1 block">Enter Year</label>
+                  <input 
+                    type="number" 
+                    className="input-premium w-full" 
+                    value={formData.year} 
+                    onChange={e => setFormData({...formData, year: parseInt(e.target.value) || new Date().getFullYear()})}
+                    placeholder="2025"
+                  />
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="p-4 rounded-xl border bg-green-50/50 dark:bg-green-900/10 border-green-100 col-span-2">
                   <h3 className="font-semibold text-green-700 dark:text-green-400 mb-3 flex gap-2 items-center"><DollarSign size={16}/> Income</h3>
@@ -419,7 +444,7 @@ const ImprovedMonthlyTracker: React.FC = () => {
                   <th className="px-4 py-3 text-right text-blue-600">Invest</th>
                   <th className="px-4 py-3 text-right text-emerald-600">E-Fund</th>
                   <th className="px-4 py-3 text-right font-bold bg-green-50/50 dark:bg-green-900/10">Leftover</th>
-                  <th className="px-4 py-3 text-center">Paid?</th>
+                  <th className="px-4 py-3 text-center min-w-[140px]">Payment Checklist</th>
                   <th className="px-4 py-3 text-center">Actions</th>
                 </tr>
               </thead>
@@ -446,9 +471,29 @@ const ImprovedMonthlyTracker: React.FC = () => {
                         {currencySymbol}{net.toLocaleString()}
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <div className="flex justify-center gap-1">
-                          <button onClick={() => togglePaid(record.id, 'rent')} className={`p-1.5 rounded-md border ${paidStatus[`${record.id}_rent`] ? 'bg-green-100 border-green-200 text-green-700' : 'bg-gray-50 border-gray-200 text-gray-400 hover:bg-gray-100'}`} title="Rent Paid">🏠</button>
-                          <button onClick={() => togglePaid(record.id, 'cc')} className={`p-1.5 rounded-md border ${paidStatus[`${record.id}_cc`] ? 'bg-purple-100 border-purple-200 text-purple-700' : 'bg-gray-50 border-gray-200 text-gray-400 hover:bg-gray-100'}`} title="Credit Card Paid">💳</button>
+                        <div className="flex flex-col gap-1.5 items-center justify-center">
+                          <button 
+                            onClick={() => togglePaid(record.id, 'rent')} 
+                            className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide w-full justify-start transition-all ${
+                              paidStatus[`${record.id}_rent`] 
+                                ? 'bg-green-100 text-green-700 border border-green-200 shadow-sm' 
+                                : 'bg-gray-50 text-gray-400 border border-gray-200 hover:bg-gray-100'
+                            }`}
+                          >
+                            {paidStatus[`${record.id}_rent`] ? <CheckCircle2 size={12} className="fill-green-600 text-white" /> : <Circle size={12} />}
+                            Rent
+                          </button>
+                          <button 
+                            onClick={() => togglePaid(record.id, 'cc')} 
+                            className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide w-full justify-start transition-all ${
+                              paidStatus[`${record.id}_cc`] 
+                                ? 'bg-purple-100 text-purple-700 border border-purple-200 shadow-sm' 
+                                : 'bg-gray-50 text-gray-400 border border-gray-200 hover:bg-gray-100'
+                            }`}
+                          >
+                            {paidStatus[`${record.id}_cc`] ? <CheckCircle2 size={12} className="fill-purple-600 text-white" /> : <Circle size={12} />}
+                            Card
+                          </button>
                         </div>
                       </td>
                       <td className="px-4 py-3 text-center whitespace-nowrap">
