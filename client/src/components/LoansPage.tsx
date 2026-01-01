@@ -1,24 +1,28 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../api';
-import { Loan } from '../types';
+import { Loan, UserProfile } from '../types';
 import { useUser } from '../UserContext';
 import {
-  PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+  PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  AreaChart, Area
 } from 'recharts';
 import { 
   Edit2, Trash2, Plus, Download, Upload, Lightbulb, TrendingUp, Calendar, DollarSign,
-  Activity, ChevronDown, ChevronUp, Wallet
+  Activity, ChevronDown, ChevronUp, Wallet, Target, ShieldAlert, Percent
 } from 'lucide-react';
 
 const LoansPage: React.FC = () => {
   const { currentUser } = useUser();
   const [loans, setLoans] = useState<Loan[]>([]);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [editingLoan, setEditingLoan] = useState<Loan | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [expandedSchedule, setExpandedSchedule] = useState<number | null>(null);
   const [showFormulaInfo, setShowFormulaInfo] = useState(false);
   const [showExtraPaymentCalc, setShowExtraPaymentCalc] = useState<number | null>(null);
+  const [payoffStrategy, setPayoffStrategy] = useState<'avalanche' | 'snowball'>('avalanche');
+  
   const [newLoan, setNewLoan] = useState({
     name: '',
     type: 'personal',
@@ -32,17 +36,21 @@ const LoansPage: React.FC = () => {
 
   useEffect(() => {
     if (currentUser) {
-      fetchLoans();
+      fetchData();
     }
   }, [currentUser]);
 
-  const fetchLoans = async () => {
+  const fetchData = async () => {
     if (!currentUser) return;
     try {
-      const response = await api.getLoans(currentUser.id);
-      setLoans(response.data);
+      const [loansRes, profileRes] = await Promise.all([
+        api.getLoans(currentUser.id),
+        api.getProfile(currentUser.id)
+      ]);
+      setLoans(loansRes.data);
+      setProfile(profileRes.data);
     } catch (error) {
-      console.error('Error fetching loans:', error);
+      console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }
@@ -85,7 +93,7 @@ const LoansPage: React.FC = () => {
       const data = format === 'json' ? JSON.parse(text) : text;
       const response = await api.importLoans(currentUser.id, data, format);
       const { imported, errors, message } = response.data;
-      await fetchLoans();
+      await fetchData();
       alert(`${message}\n\n✅ Imported: ${imported}\n❌ Errors: ${errors}`);
       event.target.value = '';
     } catch (error) {
@@ -162,6 +170,48 @@ const LoansPage: React.FC = () => {
     };
   };
 
+  // Generate data for Debt Payoff Chart
+  const generatePayoffData = () => {
+    const activeLoans = loans.filter(l => l.status === 'active');
+    if (activeLoans.length === 0) return [];
+
+    let maxMonths = 0;
+    const loanSchedules = activeLoans.map(loan => {
+      const info = getCurrentInstallmentInfo(loan);
+      if (info.remainingInstallments > maxMonths) maxMonths = info.remainingInstallments;
+      return { loan, info };
+    });
+
+    const data = [];
+    const today = new Date();
+    
+    for (let i = 0; i <= maxMonths; i += 1) { // Plot every month
+      const date = new Date(today);
+      date.setMonth(date.getMonth() + i);
+      
+      let totalBalance = 0;
+      let totalInterest = 0;
+
+      loanSchedules.forEach(({ loan, info }) => {
+        // Find schedule entry for this future month
+        const scheduleIndex = info.currentInstallmentNo - 1 + i;
+        if (scheduleIndex < info.schedule.length) {
+          totalBalance += info.schedule[scheduleIndex].closingPrincipal;
+          totalInterest += info.schedule[scheduleIndex].interest;
+        }
+      });
+
+      if (i % 3 === 0 || i === maxMonths) { // optimize data points for chart
+        data.push({
+          month: date.toLocaleString('default', { month: 'short', year: '2-digit' }),
+          Balance: Math.round(totalBalance),
+          Interest: Math.round(totalInterest)
+        });
+      }
+    }
+    return data;
+  };
+
   const handleEdit = (loan: Loan) => {
     setEditingLoan({ ...loan });
     setShowAddForm(false);
@@ -170,17 +220,9 @@ const LoansPage: React.FC = () => {
   const handleSaveEdit = async () => {
     if (!editingLoan) return;
     try {
-      const updateData = {
-        name: editingLoan.name,
-        type: editingLoan.type,
-        principal: editingLoan.principal,
-        interest_rate: editingLoan.interest_rate,
-        tenure: editingLoan.tenure,
-        start_date: editingLoan.start_date,
-        status: editingLoan.status || 'active'
-      };
+      const updateData = { ...editingLoan };
       await api.updateLoan(editingLoan.id, updateData);
-      await fetchLoans();
+      await fetchData();
       setEditingLoan(null);
     } catch (error) {
       console.error('Error updating loan:', error);
@@ -193,17 +235,11 @@ const LoansPage: React.FC = () => {
     if (!currentUser) return;
     try {
       await api.createLoan({ ...newLoan, user_id: currentUser.id });
-      await fetchLoans();
+      await fetchData();
       setShowAddForm(false);
       setNewLoan({
-        name: '',
-        type: 'personal',
-        principal: 0,
-        interest_rate: 0,
-        tenure: 12,
-        monthly_payment: 0,
-        start_date: new Date().toISOString().split('T')[0],
-        status: 'active'
+        name: '', type: 'personal', principal: 0, interest_rate: 0, tenure: 12,
+        monthly_payment: 0, start_date: new Date().toISOString().split('T')[0], status: 'active'
       });
     } catch (error) {
       console.error('Error adding loan:', error);
@@ -212,10 +248,10 @@ const LoansPage: React.FC = () => {
   };
 
   const handleDelete = async (id: number, name: string) => {
-    if (!confirm(`Are you sure you want to delete "${name}"? This action cannot be undone.`)) return;
+    if (!confirm(`Delete "${name}"?`)) return;
     try {
       await api.deleteLoan(id);
-      await fetchLoans();
+      await fetchData();
     } catch (error) {
       console.error('Error deleting loan:', error);
       alert('Failed to delete loan');
@@ -223,17 +259,37 @@ const LoansPage: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-600"></div>
-      </div>
-    );
+    return <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]"><div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-600"></div></div>;
   }
 
   const activeLoans = loans.filter(l => l.status === 'active');
   const totalPrincipal = loans.reduce((sum, loan) => sum + loan.principal, 0);
   const totalMonthlyPayment = activeLoans.reduce((sum, loan) => sum + loan.monthly_payment, 0);
   const totalInterest = loans.reduce((sum, loan) => sum + (loan.total_interest || 0), 0);
+  
+  // DTI Calculation
+  const monthlyIncome = profile?.monthly_salary || 1; // Avoid division by zero
+  const dtiRatio = (totalMonthlyPayment / monthlyIncome) * 100;
+  
+  // Payoff Chart Data
+  const payoffData = generatePayoffData();
+
+  // Strategy Recommendations
+  const getStrategicRecommendations = () => {
+    return activeLoans.map(loan => {
+      const info = getCurrentInstallmentInfo(loan);
+      return {
+        ...loan,
+        remainingBalance: info.currentOutstanding,
+        remainingMonths: info.remainingInstallments
+      };
+    }).sort((a, b) => {
+      if (payoffStrategy === 'avalanche') return b.interest_rate - a.interest_rate; // Highest Rate First
+      return a.remainingBalance - b.remainingBalance; // Lowest Balance First (Snowball)
+    });
+  };
+
+  const strategicLoans = getStrategicRecommendations();
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-gray-50 dark:bg-gray-900/50 p-6 animate-in fade-in duration-500">
@@ -243,9 +299,9 @@ const LoansPage: React.FC = () => {
         <div className="flex flex-col md:flex-row justify-between items-center gap-6 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent flex items-center gap-3">
-              Your Loans <Wallet className="text-indigo-600" />
+              Debt Dashboard <Wallet className="text-indigo-600" />
             </h1>
-            <p className="text-gray-500 dark:text-gray-400 mt-1">Manage, Track & Eliminate your Debt</p>
+            <p className="text-gray-500 dark:text-gray-400 mt-1">Visualize, Strategize & Eliminate Debt</p>
           </div>
           <div className="flex flex-wrap gap-3">
             <div className="relative inline-block">
@@ -254,14 +310,12 @@ const LoansPage: React.FC = () => {
               </button>
               <input id="loan-import-file" type="file" accept=".json,.csv" onChange={handleImport} className="hidden" />
             </div>
-            
             <button onClick={() => handleExport('json')} className="px-4 py-2 bg-purple-50 text-purple-600 hover:bg-purple-100 dark:bg-purple-900/20 dark:text-purple-400 rounded-xl transition-all flex items-center gap-2 border border-purple-200 dark:border-purple-800 font-medium">
               <Download size={18} /> Export
             </button>
-
             <button onClick={() => { setShowAddForm(true); setEditingLoan(null); }} className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-blue-500/20 font-medium">
               <Plus size={18} /> Add New Loan
-            </button>
+          </button>
           </div>
         </div>
 
@@ -292,12 +346,183 @@ const LoansPage: React.FC = () => {
             <div className="relative z-10">
               <p className="text-orange-100 text-sm font-medium mb-1">Total Interest</p>
               <p className="text-3xl font-bold">₹{totalInterest.toLocaleString()}</p>
-            </div>
+                </div>
             <TrendingUp className="absolute right-4 bottom-4 text-orange-400/30 w-16 h-16" />
-          </div>
-        </div>
+                </div>
+                </div>
 
-        {/* Tabular Loan List */}
+        {/* Financial Health & DTI Section (New) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className={`p-6 rounded-2xl border shadow-sm ${dtiRatio > 40 ? 'bg-red-50 border-red-200 dark:bg-red-900/20' : dtiRatio > 30 ? 'bg-orange-50 border-orange-200' : 'bg-green-50 border-green-200'}`}>
+            <div className="flex justify-between items-start mb-2">
+              <h3 className="font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                <ShieldAlert size={18}/> Debt-to-Income Ratio
+              </h3>
+              <span className={`px-2 py-1 rounded text-xs font-bold ${dtiRatio > 40 ? 'bg-red-200 text-red-800' : 'bg-green-200 text-green-800'}`}>
+                {dtiRatio.toFixed(1)}%
+              </span>
+                </div>
+            <p className="text-2xl font-bold mb-1">{dtiRatio > 40 ? 'High Risk ⚠️' : dtiRatio > 30 ? 'Moderate ⚠️' : 'Healthy ✅'}</p>
+            <p className="text-xs opacity-80">
+              {dtiRatio > 40 
+                ? "Your debt payments consume >40% of income. Focus on paying down debt aggressively."
+                : "Your debt load is manageable. Keep it under 30% for best financial health."}
+            </p>
+                </div>
+
+          <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+            <h3 className="font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2 mb-2">
+              <Calendar size={18} className="text-blue-500"/> Debt-Free Projection
+            </h3>
+            <p className="text-2xl font-bold text-blue-600 mb-1">
+              {(() => {
+                const maxMonths = Math.max(...activeLoans.map(l => getCurrentInstallmentInfo(l).remainingInstallments), 0);
+                const date = new Date();
+                date.setMonth(date.getMonth() + maxMonths);
+                return date.toLocaleString('default', { month: 'short', year: 'numeric' });
+              })()}
+            </p>
+            <p className="text-xs text-gray-500">Estimated date to be completely debt-free at current pace.</p>
+                </div>
+
+          <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+            <h3 className="font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2 mb-2">
+              <Target size={18} className="text-purple-500"/> Monthly Commitment
+            </h3>
+            <p className="text-2xl font-bold text-purple-600 mb-1">₹{totalMonthlyPayment.toLocaleString()}</p>
+            <p className="text-xs text-gray-500">Total EMI amount leaving your account every month.</p>
+                </div>
+              </div>
+
+        {/* Debt Payoff Timeline Chart (New) */}
+        {payoffData.length > 0 && (
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+              <TrendingUp className="text-green-500"/> Projected Debt Payoff Timeline
+            </h3>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={payoffData}>
+                  <defs>
+                    <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.1}/>
+                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                  <XAxis dataKey="month" tick={{fontSize: 12}} />
+                  <YAxis tick={{fontSize: 12}} tickFormatter={(val) => `₹${val/1000}k`} />
+                  <Tooltip formatter={(val: number) => `₹${val.toLocaleString()}`} />
+                  <Area type="monotone" dataKey="Balance" stroke="#ef4444" fillOpacity={1} fill="url(#colorBalance)" strokeWidth={2} />
+                </AreaChart>
+              </ResponsiveContainer>
+              </div>
+          </div>
+        )}
+
+        {/* Strategy & Recommendations */}
+        {activeLoans.length > 0 && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Payoff Strategy Toggle */}
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <Activity className="text-blue-500"/> Payoff Strategy
+                </h3>
+                <div className="flex bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
+                  <button 
+                    onClick={() => setPayoffStrategy('avalanche')}
+                    className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${payoffStrategy === 'avalanche' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500'}`}
+                  >
+                    Avalanche (Save Interest)
+                  </button>
+                  <button 
+                    onClick={() => setPayoffStrategy('snowball')}
+                    className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${payoffStrategy === 'snowball' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500'}`}
+                  >
+                    Snowball (Momentum)
+                  </button>
+              </div>
+              </div>
+
+              <div className="space-y-4">
+                <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+                  {payoffStrategy === 'avalanche' 
+                    ? "Focusing on loans with the HIGHEST interest rate first. This mathematically saves you the most money." 
+                    : "Focusing on loans with the SMALLEST balance first. This gives you quick wins and psychological momentum."}
+                </p>
+                
+                {strategicLoans.map((loan, idx) => (
+                  <div key={loan.id} className={`p-4 rounded-xl border-l-4 ${idx === 0 ? 'bg-blue-50 border-blue-500' : 'bg-gray-50 border-gray-300'} dark:bg-gray-900/50`}>
+                    <div className="flex justify-between items-start">
+              <div>
+                        <h4 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                          {idx + 1}. {loan.name}
+                          {idx === 0 && <span className="text-[10px] bg-blue-200 text-blue-800 px-2 py-0.5 rounded-full">PRIORITY</span>}
+                        </h4>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Rate: {loan.interest_rate}% • Balance: ₹{Math.round(loan.remainingBalance).toLocaleString()}
+                  </p>
+                </div>
+                      <div className="text-right">
+                        <p className="font-bold text-sm text-gray-800 dark:text-gray-200">Pay Minimum + Extra</p>
+                        <p className="text-xs text-gray-500">EMI: ₹{loan.monthly_payment.toLocaleString()}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              </div>
+
+            {/* Charts & Visualizations */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Principal vs Interest Bar Chart */}
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <Activity className="text-blue-500"/> Principal vs Interest
+                </h3>
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={loans.map(l => ({ name: l.name, Principal: l.principal, Interest: l.total_interest || 0 }))}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                      <XAxis dataKey="name" tick={{fontSize: 12}} />
+                      <YAxis tick={{fontSize: 12}} />
+                      <Tooltip formatter={(val: number) => `₹${val.toLocaleString()}`} />
+                      <Legend />
+                      <Bar dataKey="Interest" stackId="a" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="Principal" stackId="a" fill="#3b82f6" radius={[0, 0, 4, 4]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+              </div>
+              </div>
+
+              {/* Portfolio Distribution Pie Chart */}
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <Percent className="text-orange-500"/> Portfolio Distribution
+                </h3>
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={loans.map(l => ({ name: l.name, value: l.principal }))}
+                        cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value"
+                      >
+                        {loans.map((_, index) => (
+                          <Cell key={`cell-${index}`} fill={['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'][index % 5]} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(val: number) => `₹${val.toLocaleString()}`} />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tabular Loan List (Existing) */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
           <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
@@ -306,20 +531,19 @@ const LoansPage: React.FC = () => {
             <span className="text-sm text-gray-500">{loans.length} active loans</span>
           </div>
           
-          <div className="overflow-x-auto">
-            <table className="w-full">
+            <div className="overflow-x-auto">
+              <table className="w-full">
               <thead className="bg-gray-50 dark:bg-gray-900/50 text-xs uppercase text-gray-500 font-semibold">
                 <tr>
                   <th className="px-6 py-4 text-left">Loan Name</th>
-                  <th className="px-6 py-4 text-left">Type</th>
-                  <th className="px-6 py-4 text-right">Principal</th>
+                  <th className="px-6 py-4 text-left">Principal</th>
                   <th className="px-6 py-4 text-right">Monthly EMI</th>
                   <th className="px-6 py-4 text-left">Start Date</th>
                   <th className="px-6 py-4 text-left">Payoff Date</th>
                   <th className="px-6 py-4 text-left w-48">Progress</th>
                   <th className="px-6 py-4 text-center">Actions</th>
-                </tr>
-              </thead>
+                  </tr>
+                </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                 {loans.map((loan) => {
                    const installmentInfo = getCurrentInstallmentInfo(loan);
@@ -329,13 +553,11 @@ const LoansPage: React.FC = () => {
 
                    return (
                     <tr key={loan.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                      <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{loan.name}</td>
-                      <td className="px-6 py-4">
-                        <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 capitalize">
-                          {loan.type.replace('_', ' ')}
-                        </span>
+                      <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
+                        {loan.name}
+                        <span className="block text-xs text-gray-500 uppercase mt-0.5">{loan.type.replace('_', ' ')}</span>
                       </td>
-                      <td className="px-6 py-4 text-right font-medium text-gray-900 dark:text-white">₹{loan.principal.toLocaleString()}</td>
+                      <td className="px-6 py-4 text-gray-900 dark:text-white">₹{loan.principal.toLocaleString()}</td>
                       <td className="px-6 py-4 text-right font-bold text-purple-600 dark:text-purple-400">₹{loan.monthly_payment.toLocaleString()}</td>
                       <td className="px-6 py-4 text-sm text-gray-500">{new Date(loan.start_date).toLocaleDateString()}</td>
                       <td className="px-6 py-4 text-sm text-gray-500">{payoffDate.toLocaleDateString()}</td>
@@ -343,32 +565,32 @@ const LoansPage: React.FC = () => {
                         <div className="flex items-center gap-3">
                           <div className="flex-1 h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                             <div className="h-full bg-green-500 rounded-full" style={{ width: `${progress}%` }}></div>
-                          </div>
+                              </div>
                           <span className="text-xs font-bold text-green-600">{progress.toFixed(0)}%</span>
-                        </div>
+                            </div>
                       </td>
                       <td className="px-6 py-4 text-center">
                         <div className="flex items-center justify-center gap-2">
                           <button onClick={() => handleEdit(loan)} className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors" title="Edit">
                             <Edit2 size={16} />
-                          </button>
+                        </button>
                           <button onClick={() => handleDelete(loan.id, loan.name)} className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors" title="Delete">
                             <Trash2 size={16} />
-                          </button>
+                        </button>
                         </div>
                       </td>
                     </tr>
                    );
                 })}
-              </tbody>
-            </table>
-          </div>
+                </tbody>
+              </table>
+            </div>
         </div>
 
         {/* Detailed Dashboard per Loan */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-            📊 Detailed Loan Analytics
+            📊 Detailed Loan Analytics & Simulator
           </h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {activeLoans.map(loan => {
@@ -390,22 +612,22 @@ const LoansPage: React.FC = () => {
                         EMI #{currentInstallmentNo} / {loan.tenure}
                       </span>
                     </div>
-                  </div>
+          </div>
 
                   <div className="grid grid-cols-3 gap-2 mb-4">
                     <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
                       <p className="text-[10px] text-gray-500 uppercase font-bold">This Month</p>
                       <p className="font-bold text-blue-600 text-sm">₹{loan.monthly_payment.toLocaleString()}</p>
-                    </div>
+          </div>
                     <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
                       <p className="text-[10px] text-gray-500 uppercase font-bold">Principal</p>
                       <p className="font-bold text-green-600 text-sm">₹{Math.round(currentMonthPrincipal).toLocaleString()}</p>
-                    </div>
+          </div>
                     <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
                       <p className="text-[10px] text-gray-500 uppercase font-bold">Interest</p>
                       <p className="font-bold text-red-600 text-sm">₹{Math.round(currentMonthInterest).toLocaleString()}</p>
-                    </div>
-                  </div>
+          </div>
+        </div>
 
                   <div className="bg-orange-50 dark:bg-orange-900/10 p-4 rounded-lg border border-orange-100 dark:border-orange-800 mb-4">
                     <div className="flex justify-between items-center">
@@ -416,9 +638,9 @@ const LoansPage: React.FC = () => {
                       <div className="text-right">
                         <p className="text-xs text-gray-500 uppercase font-bold">Months Left</p>
                         <p className="text-xl font-extrabold text-gray-800 dark:text-gray-200">{remainingInstallments}</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
                   {/* Preclosure Insight */}
                   <div className={`p-3 rounded-lg text-xs border mb-4 ${savings > 0 ? 'bg-green-50 border-green-200 text-green-800' : 'bg-gray-100 border-gray-200 text-gray-600'}`}>
@@ -444,8 +666,7 @@ const LoansPage: React.FC = () => {
                        <DollarSign size={14}/> Extra Payment
                      </button>
                   </div>
-
-                  {/* Expanded Sections (Simplified for brevity but functional) */}
+                  
                   {expandedSchedule === loan.id && (
                     <div className="mt-4 max-h-60 overflow-y-auto border rounded bg-white dark:bg-gray-800 text-xs">
                       <table className="w-full">
@@ -463,7 +684,7 @@ const LoansPage: React.FC = () => {
                           ))}
                         </tbody>
                       </table>
-                    </div>
+                  </div>
                   )}
                   
                   {showExtraPaymentCalc === loan.id && (
@@ -477,7 +698,7 @@ const LoansPage: React.FC = () => {
                             <p>• Saves <strong>{impact.tenureReduction} months</strong> of tenure</p>
                             <p>• Saves <strong>₹{impact.emiSavings.toLocaleString()}</strong> in future interest</p>
                             <p>• New Balance: ₹{impact.newOutstanding.toLocaleString()}</p>
-                          </div>
+                  </div>
                         );
                       })()}
                     </div>
@@ -488,61 +709,18 @@ const LoansPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Charts & Graphs */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">📊 Principal vs Interest Breakdown</h3>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={loans.map(l => ({ name: l.name, Principal: l.principal, Interest: l.total_interest || 0 }))}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip formatter={(val: number) => `₹${val.toLocaleString()}`} />
-                  <Legend />
-                  <Bar dataKey="Interest" stackId="a" fill="#ef4444" radius={[0, 0, 4, 4]} />
-                  <Bar dataKey="Principal" stackId="a" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-          
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-             <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">📊 Loan Distribution (by Principal)</h3>
-             <div className="h-64">
-               <ResponsiveContainer width="100%" height="100%">
-                 <PieChart>
-                   <Pie
-                     data={loans.map(l => ({ name: l.name, value: l.principal }))}
-                     cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value"
-                   >
-                     {loans.map((_, index) => (
-                       <Cell key={`cell-${index}`} fill={['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'][index % 5]} />
-                     ))}
-                   </Pie>
-                   <Tooltip formatter={(val: number) => `₹${val.toLocaleString()}`} />
-                   <Legend />
-                 </PieChart>
-               </ResponsiveContainer>
-             </div>
-          </div>
-        </div>
-
         {/* Calculation Formulas Info - Collapsible */}
         <div className="mt-8 mb-6">
-          <button
-            onClick={() => setShowFormulaInfo(!showFormulaInfo)}
-            className="w-full px-6 py-3 bg-gradient-to-r from-gray-700 to-gray-900 text-white rounded-lg hover:from-gray-800 hover:to-black transition-all flex items-center justify-center gap-3 font-medium shadow-lg"
-          >
-            <span className="text-2xl">ℹ️</span>
+          <button onClick={() => setShowFormulaInfo(!showFormulaInfo)} className="w-full px-6 py-3 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-all flex items-center justify-center gap-3 font-medium">
+            <span className="text-xl">ℹ️</span>
             <span>{showFormulaInfo ? 'Hide' : 'Show'} Calculation Formulas & How We Calculate</span>
-            <span className="text-xl">{showFormulaInfo ? '▲' : '▼'}</span>
+            <span className="text-lg">{showFormulaInfo ? '▲' : '▼'}</span>
           </button>
           
           {showFormulaInfo && (
-            <div className="mt-4 p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-lg animate-in fade-in">
+            <div className="mt-4 p-6 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg animate-in fade-in">
               <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                📐 Mathematical Formulas Used in Our Calculations
+                📐 Mathematical Formulas Used
               </h3>
               
               <div className="space-y-6 text-sm text-gray-600 dark:text-gray-300">
@@ -552,7 +730,7 @@ const LoansPage: React.FC = () => {
                     EMI = P × r × (1 + r)^n / [(1 + r)^n - 1]
                   </p>
                   <p><strong>P</strong> = Principal, <strong>r</strong> = Monthly Interest Rate, <strong>n</strong> = Tenure in Months</p>
-                </div>
+                  </div>
 
                 <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
                   <h4 className="font-bold text-green-600 dark:text-green-400 mb-2">2️⃣ Amortization (Monthly Breakdown)</h4>
@@ -566,7 +744,7 @@ const LoansPage: React.FC = () => {
               </div>
             </div>
           )}
-        </div>
+          </div>
 
         {/* Forms & Modals */}
         {(showAddForm || editingLoan) && (
@@ -630,7 +808,7 @@ const LoansPage: React.FC = () => {
                 </form>
               </div>
             </div>
-          </div>
+            </div>
         )}
 
       </div>
