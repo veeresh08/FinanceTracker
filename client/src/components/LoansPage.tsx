@@ -8,7 +8,7 @@ import {
 } from 'recharts';
 import { 
   Edit2, Trash2, Plus, Download, Upload, Lightbulb, TrendingUp, Calendar, DollarSign,
-  Activity, ChevronDown, ChevronUp, Wallet, Target, ShieldAlert, Percent
+  Activity, ChevronDown, ChevronUp, Wallet, Target, ShieldAlert, Percent, X
 } from 'lucide-react';
 
 const LoansPage: React.FC = () => {
@@ -22,6 +22,22 @@ const LoansPage: React.FC = () => {
   const [showFormulaInfo, setShowFormulaInfo] = useState(false);
   const [showExtraPaymentCalc, setShowExtraPaymentCalc] = useState<number | null>(null);
   const [payoffStrategy, setPayoffStrategy] = useState<'avalanche' | 'snowball'>('avalanche');
+  const [selectedLoans, setSelectedLoans] = useState<number[]>([]);
+  const [showPayoffModal, setShowPayoffModal] = useState(false);
+
+  const toggleLoanSelection = (loanId: number) => {
+    setSelectedLoans(prev => 
+      prev.includes(loanId) ? prev.filter(id => id !== loanId) : [...prev, loanId]
+    );
+  };
+
+  const toggleAllLoans = () => {
+    if (selectedLoans.length === loans.length) {
+      setSelectedLoans([]);
+    } else {
+      setSelectedLoans(loans.map(l => l.id));
+    }
+  };
   
   const [newLoan, setNewLoan] = useState({
     name: '',
@@ -213,17 +229,30 @@ const LoansPage: React.FC = () => {
   };
 
   const handleEdit = (loan: Loan) => {
-    setEditingLoan({ ...loan });
+    setEditingLoan({ 
+      ...loan,
+      start_date: new Date(loan.start_date).toISOString().split('T')[0]
+    });
     setShowAddForm(false);
   };
 
   const handleSaveEdit = async () => {
     if (!editingLoan) return;
     try {
-      const updateData = { ...editingLoan };
+      const updateData = {
+        name: editingLoan.name,
+        type: editingLoan.type,
+        principal: editingLoan.principal,
+        interest_rate: editingLoan.interest_rate,
+        tenure: editingLoan.tenure,
+        monthly_payment: editingLoan.monthly_payment,
+        start_date: editingLoan.start_date,
+        status: editingLoan.status || 'active'
+      };
       await api.updateLoan(editingLoan.id, updateData);
       await fetchData();
       setEditingLoan(null);
+      alert('✅ Loan updated successfully!');
     } catch (error) {
       console.error('Error updating loan:', error);
       alert('❌ Failed to update loan');
@@ -307,17 +336,17 @@ const LoansPage: React.FC = () => {
             <div className="relative inline-block">
               <button onClick={() => document.getElementById('loan-import-file')?.click()} className="px-4 py-2 bg-green-50 text-green-600 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400 rounded-xl transition-all flex items-center gap-2 border border-green-200 dark:border-green-800 font-medium">
                 <Upload size={18} /> Import
-              </button>
+          </button>
               <input id="loan-import-file" type="file" accept=".json,.csv" onChange={handleImport} className="hidden" />
-            </div>
+        </div>
             <button onClick={() => handleExport('json')} className="px-4 py-2 bg-purple-50 text-purple-600 hover:bg-purple-100 dark:bg-purple-900/20 dark:text-purple-400 rounded-xl transition-all flex items-center gap-2 border border-purple-200 dark:border-purple-800 font-medium">
               <Download size={18} /> Export
             </button>
             <button onClick={() => { setShowAddForm(true); setEditingLoan(null); }} className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-blue-500/20 font-medium">
               <Plus size={18} /> Add New Loan
           </button>
-          </div>
-        </div>
+                </div>
+                </div>
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -392,7 +421,7 @@ const LoansPage: React.FC = () => {
             <p className="text-2xl font-bold text-purple-600 mb-1">₹{totalMonthlyPayment.toLocaleString()}</p>
             <p className="text-xs text-gray-500">Total EMI amount leaving your account every month.</p>
                 </div>
-              </div>
+                </div>
 
         {/* Debt Payoff Timeline Chart (New) */}
         {payoffData.length > 0 && (
@@ -416,8 +445,8 @@ const LoansPage: React.FC = () => {
                   <Area type="monotone" dataKey="Balance" stroke="#ef4444" fillOpacity={1} fill="url(#colorBalance)" strokeWidth={2} />
                 </AreaChart>
               </ResponsiveContainer>
+                </div>
               </div>
-          </div>
         )}
 
         {/* Strategy & Recommendations */}
@@ -435,15 +464,15 @@ const LoansPage: React.FC = () => {
                     className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${payoffStrategy === 'avalanche' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500'}`}
                   >
                     Avalanche (Save Interest)
-                  </button>
-                  <button 
+                </button>
+                <button 
                     onClick={() => setPayoffStrategy('snowball')}
                     className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${payoffStrategy === 'snowball' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500'}`}
-                  >
+                >
                     Snowball (Momentum)
-                  </button>
+                </button>
               </div>
-              </div>
+          </div>
 
               <div className="space-y-4">
                 <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
@@ -463,13 +492,13 @@ const LoansPage: React.FC = () => {
                         <p className="text-xs text-gray-500 mt-1">
                           Rate: {loan.interest_rate}% • Balance: ₹{Math.round(loan.remainingBalance).toLocaleString()}
                   </p>
-                </div>
+              </div>
                       <div className="text-right">
                         <p className="font-bold text-sm text-gray-800 dark:text-gray-200">Pay Minimum + Extra</p>
                         <p className="text-xs text-gray-500">EMI: ₹{loan.monthly_payment.toLocaleString()}</p>
-                      </div>
-                    </div>
-                  </div>
+              </div>
+              </div>
+              </div>
                 ))}
               </div>
               </div>
@@ -494,7 +523,7 @@ const LoansPage: React.FC = () => {
                     </BarChart>
                   </ResponsiveContainer>
               </div>
-              </div>
+            </div>
 
               {/* Portfolio Distribution Pie Chart */}
               <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
@@ -529,14 +558,23 @@ const LoansPage: React.FC = () => {
               📋 All Loans
             </h2>
             <span className="text-sm text-gray-500">{loans.length} active loans</span>
-          </div>
+            </div>
           
             <div className="overflow-x-auto">
               <table className="w-full">
               <thead className="bg-gray-50 dark:bg-gray-900/50 text-xs uppercase text-gray-500 font-semibold">
                 <tr>
+                  <th className="px-6 py-4 w-4">
+                    <input 
+                      type="checkbox" 
+                      checked={loans.length > 0 && selectedLoans.length === loans.length}
+                      onChange={toggleAllLoans}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                  </th>
                   <th className="px-6 py-4 text-left">Loan Name</th>
                   <th className="px-6 py-4 text-left">Principal</th>
+                  <th className="px-6 py-4 text-left">Rate</th>
                   <th className="px-6 py-4 text-right">Monthly EMI</th>
                   <th className="px-6 py-4 text-left">Start Date</th>
                   <th className="px-6 py-4 text-left">Payoff Date</th>
@@ -552,12 +590,28 @@ const LoansPage: React.FC = () => {
                    payoffDate.setMonth(payoffDate.getMonth() + loan.tenure);
 
                    return (
-                    <tr key={loan.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                    <tr key={loan.id} className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${selectedLoans.includes(loan.id) ? 'bg-blue-50/50' : ''}`}>
+                      <td className="px-6 py-4">
+                        <input 
+                          type="checkbox" 
+                          checked={selectedLoans.includes(loan.id)} 
+                          onChange={() => toggleLoanSelection(loan.id)}
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                        />
+                      </td>
                       <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
                         {loan.name}
                         <span className="block text-xs text-gray-500 uppercase mt-0.5">{loan.type.replace('_', ' ')}</span>
                       </td>
                       <td className="px-6 py-4 text-gray-900 dark:text-white">₹{loan.principal.toLocaleString()}</td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-1">
+                          <span className={`font-bold ${loan.interest_rate > 12 ? 'text-red-600' : loan.interest_rate > 8 ? 'text-orange-600' : 'text-green-600'}`}>
+                            {loan.interest_rate}%
+                        </span>
+                          {loan.interest_rate > 12 && <span title="High Interest Rate" className="text-xs">🔥</span>}
+                        </div>
+                      </td>
                       <td className="px-6 py-4 text-right font-bold text-purple-600 dark:text-purple-400">₹{loan.monthly_payment.toLocaleString()}</td>
                       <td className="px-6 py-4 text-sm text-gray-500">{new Date(loan.start_date).toLocaleDateString()}</td>
                       <td className="px-6 py-4 text-sm text-gray-500">{payoffDate.toLocaleDateString()}</td>
@@ -584,14 +638,71 @@ const LoansPage: React.FC = () => {
                 })}
                 </tbody>
               </table>
+        </div>
+
+            {/* Payoff Simulator Bar */}
+            {selectedLoans.length > 0 && (
+              <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] p-4 z-40 animate-in slide-in-from-bottom duration-300">
+                <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-full text-sm font-bold">
+                      {selectedLoans.length} Selected
+          </div>
+                    <div className="h-8 w-px bg-gray-200 dark:bg-gray-700 hidden md:block"></div>
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase font-bold">Cost to Clear Now</p>
+                      <p className="text-xl font-bold text-gray-900 dark:text-white">
+                        ₹{Math.round(loans.filter(l => selectedLoans.includes(l.id)).reduce((sum, l) => {
+                          const info = getCurrentInstallmentInfo(l);
+                          return sum + info.currentOutstanding;
+                        }, 0)).toLocaleString()}
+                      </p>
+                    </div>
+          </div>
+
+                  <div className="flex gap-8">
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase font-bold">Monthly Cashflow Freed</p>
+                      <p className="text-lg font-bold text-green-600">
+                        + ₹{loans.filter(l => selectedLoans.includes(l.id)).reduce((sum, l) => sum + l.monthly_payment, 0).toLocaleString()} / mo
+            </p>
+          </div>
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase font-bold">Interest Saved</p>
+                      <p className="text-lg font-bold text-blue-600">
+                         ₹{Math.round(loans.filter(l => selectedLoans.includes(l.id)).reduce((sum, l) => {
+                          const info = getCurrentInstallmentInfo(l);
+                          const remainingPayment = l.monthly_payment * info.remainingInstallments;
+                          return sum + (remainingPayment - info.currentOutstanding);
+                        }, 0)).toLocaleString()}
+            </p>
+          </div>
+        </div>
+
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => setSelectedLoans([])}
+                      className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-sm font-medium"
+                    >
+                      Clear
+                    </button>
+                    <button 
+                      onClick={() => setShowPayoffModal(true)}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold shadow-sm transition-colors"
+                    >
+                      Simulate Payoff
+                    </button>
+                  </div>
+                </div>
             </div>
+          )}
         </div>
 
         {/* Detailed Dashboard per Loan */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
             📊 Detailed Loan Analytics & Simulator
-          </h2>
+            </h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {activeLoans.map(loan => {
               const info = getCurrentInstallmentInfo(loan);
@@ -600,34 +711,34 @@ const LoansPage: React.FC = () => {
               const totalPreclosure = currentOutstanding + preclosureCharge;
               const savings = (loan.monthly_payment * remainingInstallments) - totalPreclosure;
 
-              return (
+                return (
                 <div key={loan.id} className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-6 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow">
                   <div className="flex justify-between items-start mb-4">
-                    <div>
+                      <div>
                       <h3 className="text-lg font-bold text-gray-900 dark:text-white">{loan.name}</h3>
                       <p className="text-xs text-gray-500">Started: {new Date(loan.start_date).toLocaleDateString()}</p>
-                    </div>
-                    <div className="text-right">
+                      </div>
+                      <div className="text-right">
                       <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-bold rounded-full">
                         EMI #{currentInstallmentNo} / {loan.tenure}
                       </span>
+                      </div>
                     </div>
-          </div>
 
                   <div className="grid grid-cols-3 gap-2 mb-4">
                     <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
                       <p className="text-[10px] text-gray-500 uppercase font-bold">This Month</p>
                       <p className="font-bold text-blue-600 text-sm">₹{loan.monthly_payment.toLocaleString()}</p>
-          </div>
+                      </div>
                     <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
                       <p className="text-[10px] text-gray-500 uppercase font-bold">Principal</p>
                       <p className="font-bold text-green-600 text-sm">₹{Math.round(currentMonthPrincipal).toLocaleString()}</p>
-          </div>
+                        </div>
                     <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
                       <p className="text-[10px] text-gray-500 uppercase font-bold">Interest</p>
                       <p className="font-bold text-red-600 text-sm">₹{Math.round(currentMonthInterest).toLocaleString()}</p>
-          </div>
-        </div>
+                      </div>
+                    </div>
 
                   <div className="bg-orange-50 dark:bg-orange-900/10 p-4 rounded-lg border border-orange-100 dark:border-orange-800 mb-4">
                     <div className="flex justify-between items-center">
@@ -643,7 +754,7 @@ const LoansPage: React.FC = () => {
                     </div>
 
                   {/* Preclosure Insight */}
-                  <div className={`p-3 rounded-lg text-xs border mb-4 ${savings > 0 ? 'bg-green-50 border-green-200 text-green-800' : 'bg-gray-100 border-gray-200 text-gray-600'}`}>
+                  <div className={`p-3 rounded-lg text-xs border mb-2 ${savings > 0 ? 'bg-green-50 border-green-200 text-green-800' : 'bg-gray-100 border-gray-200 text-gray-600'}`}>
                     <div className="flex gap-2 items-start">
                       <Lightbulb size={14} className="mt-0.5 shrink-0" />
                       <div>
@@ -656,6 +767,22 @@ const LoansPage: React.FC = () => {
                       </div>
                     </div>
                   </div>
+
+                  {/* Refinance Check */}
+                  {loan.interest_rate > 10 && (
+                    <div className="p-3 rounded-lg text-xs border mb-4 bg-blue-50 border-blue-200 text-blue-800">
+                      <div className="flex gap-2 items-start">
+                        <Activity size={14} className="mt-0.5 shrink-0" />
+                      <div>
+                          <p className="font-bold">Refinance Opportunity</p>
+                          <p>
+                            Your rate is {loan.interest_rate}%. If you refinance at {loan.interest_rate - 2}%, you could save approx 
+                            <strong> ₹{Math.round((remainingInstallments * loan.monthly_payment) * 0.05).toLocaleString()}</strong> in interest!
+                          </p>
+                      </div>
+                    </div>
+                    </div>
+                  )}
 
                   <div className="flex gap-2 border-t border-gray-200 dark:border-gray-700 pt-4">
                      <button onClick={() => setExpandedSchedule(expandedSchedule === loan.id ? null : loan.id)} className="flex-1 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex justify-center items-center gap-2">
@@ -703,9 +830,9 @@ const LoansPage: React.FC = () => {
                       })()}
                     </div>
                   )}
-                </div>
-              );
-            })}
+                  </div>
+                );
+              })}
           </div>
         </div>
 
@@ -761,11 +888,11 @@ const LoansPage: React.FC = () => {
               <div className="p-6">
                 <form onSubmit={editingLoan ? handleSaveEdit : handleAddLoan} className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
+                  <div>
                       <label className="block text-sm font-medium mb-1">Loan Name</label>
                       <input type="text" className="w-full px-3 py-2 border rounded-lg" value={editingLoan ? editingLoan.name : newLoan.name} onChange={(e) => editingLoan ? setEditingLoan({ ...editingLoan, name: e.target.value }) : setNewLoan({ ...newLoan, name: e.target.value })} required />
-                    </div>
-                    <div>
+                  </div>
+                  <div>
                       <label className="block text-sm font-medium mb-1">Type</label>
                       <select className="w-full px-3 py-2 border rounded-lg" value={editingLoan ? editingLoan.type : newLoan.type} onChange={(e) => editingLoan ? setEditingLoan({ ...editingLoan, type: e.target.value as any }) : setNewLoan({ ...newLoan, type: e.target.value })}>
                         <option value="personal">Personal Loan</option>
@@ -775,8 +902,8 @@ const LoansPage: React.FC = () => {
                         <option value="credit_card">Credit Card</option>
                         <option value="other">Other</option>
                       </select>
-                    </div>
-                    <div>
+                  </div>
+                  <div>
                       <label className="block text-sm font-medium mb-1">Principal (₹)</label>
                       <input type="number" className="w-full px-3 py-2 border rounded-lg" value={editingLoan ? editingLoan.principal : newLoan.principal} onChange={(e) => editingLoan ? setEditingLoan({ ...editingLoan, principal: parseFloat(e.target.value) }) : setNewLoan({ ...newLoan, principal: parseFloat(e.target.value) })} required />
                     </div>
@@ -790,17 +917,22 @@ const LoansPage: React.FC = () => {
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1">Monthly EMI (₹)</label>
-                      {editingLoan ? (
-                        <div className="px-3 py-2 bg-gray-100 border rounded-lg text-gray-500 text-sm">Auto-calculated</div>
-                      ) : (
-                        <input type="number" className="w-full px-3 py-2 border rounded-lg" value={newLoan.monthly_payment} onChange={(e) => setNewLoan({ ...newLoan, monthly_payment: parseFloat(e.target.value) })} required />
-                      )}
-                    </div>
+                      <input 
+                        type="number" 
+                        className="w-full px-3 py-2 border rounded-lg" 
+                        value={editingLoan ? editingLoan.monthly_payment : newLoan.monthly_payment} 
+                        onChange={(e) => editingLoan ? setEditingLoan({ ...editingLoan, monthly_payment: parseFloat(e.target.value) }) : setNewLoan({ ...newLoan, monthly_payment: parseFloat(e.target.value) })} 
+                        required 
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Auto-calculated usually, but you can override this value.
+                    </p>
+                  </div>
                     <div>
                       <label className="block text-sm font-medium mb-1">Start Date</label>
                       <input type="date" className="w-full px-3 py-2 border rounded-lg" value={editingLoan ? editingLoan.start_date : newLoan.start_date} onChange={(e) => editingLoan ? setEditingLoan({ ...editingLoan, start_date: e.target.value }) : setNewLoan({ ...newLoan, start_date: e.target.value })} required />
-                    </div>
-                  </div>
+                </div>
+              </div>
                   <div className="flex gap-3 justify-end mt-6">
                     <button type="button" onClick={() => { setShowAddForm(false); setEditingLoan(null); }} className="px-4 py-2 bg-gray-100 rounded-lg">Cancel</button>
                     <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg">Save Loan</button>
@@ -808,7 +940,91 @@ const LoansPage: React.FC = () => {
                 </form>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Payoff Simulation Modal */}
+        {showPayoffModal && selectedLoans.length > 0 && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-in fade-in">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-2xl">
+                <h2 className="text-xl font-bold flex items-center gap-2">
+                  <Target className="text-white" /> Payoff Simulation
+                </h2>
+                <button onClick={() => setShowPayoffModal(false)} className="text-white/80 hover:text-white bg-white/10 p-1 rounded-full hover:bg-white/20 transition-colors">
+                  <X size={24} />
+                </button>
+              </div>
+              
+              <div className="p-6">
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl mb-6 border border-blue-100 dark:border-blue-800">
+                  <p className="text-sm text-blue-800 dark:text-blue-300 mb-2 font-medium">You are planning to clear {selectedLoans.length} loans:</p>
+                  <ul className="list-disc list-inside space-y-1 text-sm text-gray-600 dark:text-gray-400 pl-2">
+                    {loans.filter(l => selectedLoans.includes(l.id)).map(l => (
+                      <li key={l.id}>{l.name} - <span className="font-bold">₹{l.principal.toLocaleString()}</span></li>
+                    ))}
+                  </ul>
+              </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                   <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600">
+                     <p className="text-xs text-gray-500 uppercase font-bold mb-1">Total Cost Now</p>
+                     <p className="text-xl font-bold text-gray-900 dark:text-white">
+                       ₹{Math.round(loans.filter(l => selectedLoans.includes(l.id)).reduce((sum, l) => {
+                         const info = getCurrentInstallmentInfo(l);
+                         return sum + info.currentOutstanding;
+                       }, 0)).toLocaleString()}
+                     </p>
+                   </div>
+                   <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800">
+                     <p className="text-xs text-green-700 uppercase font-bold mb-1">Monthly Cashflow Freed</p>
+                     <p className="text-xl font-bold text-green-700">
+                       + ₹{loans.filter(l => selectedLoans.includes(l.id)).reduce((sum, l) => sum + l.monthly_payment, 0).toLocaleString()}
+                     </p>
+                   </div>
+                   <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-200 dark:border-purple-800">
+                     <p className="text-xs text-purple-700 uppercase font-bold mb-1">Interest Saved</p>
+                     <p className="text-xl font-bold text-purple-700">
+                        ₹{Math.round(loans.filter(l => selectedLoans.includes(l.id)).reduce((sum, l) => {
+                         const info = getCurrentInstallmentInfo(l);
+                         const remainingPayment = l.monthly_payment * info.remainingInstallments;
+                         return sum + (remainingPayment - info.currentOutstanding);
+                       }, 0)).toLocaleString()}
+                     </p>
+              </div>
             </div>
+
+                <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 p-6 rounded-2xl border border-indigo-100 dark:border-indigo-800">
+                  <h3 className="text-lg font-bold text-indigo-900 dark:text-indigo-300 mb-3 flex items-center gap-2">
+                    <TrendingUp size={20} /> Investment Opportunity
+                  </h3>
+                  <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
+                    If you invest the saved <strong>₹{loans.filter(l => selectedLoans.includes(l.id)).reduce((sum, l) => sum + l.monthly_payment, 0).toLocaleString()}/mo</strong> 
+                    in a SIP returning 12% for the next 5 years instead of paying EMIs, you could create:
+                  </p>
+                  
+                  <div className="flex items-end gap-2">
+                    <span className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">
+                      ₹{Math.round(
+                        loans.filter(l => selectedLoans.includes(l.id)).reduce((sum, l) => sum + l.monthly_payment, 0) * 
+                        (((Math.pow(1 + 0.01, 60) - 1) / 0.01) * (1 + 0.01))
+                      ).toLocaleString()}
+                    </span>
+                    <span className="text-sm text-gray-500 mb-1">Wealth Corpus</span>
+                  </div>
+                </div>
+            </div>
+
+              <div className="p-6 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex justify-end gap-3 rounded-b-2xl">
+                <button onClick={() => setShowPayoffModal(false)} className="px-5 py-2.5 text-gray-600 font-medium hover:bg-gray-200 rounded-xl transition-colors">
+                  Close
+                </button>
+                <button className="px-5 py-2.5 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:bg-blue-700 transition-all hover:scale-105 active:scale-95">
+                  Start Payoff Plan
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
       </div>

@@ -177,7 +177,6 @@ export interface InvestmentProjection {
   returns: number;
   total: number;
 }
-
 // Admin Types
 export interface ActivityLog {
   id: number;
@@ -235,3 +234,4 @@ export interface PlatformStatistics {
   daily_active_users: { date: string; active_users: number }[];
   top_users: { user_id: number; username: string; email: string; activity_count: number }[];
 }
+

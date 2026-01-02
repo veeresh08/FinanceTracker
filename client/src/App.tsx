@@ -134,9 +134,9 @@ import { ThemeProvider } from './ThemeContext';
 function App() {
   return (
     <ThemeProvider>
-      <UserProvider>
-        <AppContent />
-      </UserProvider>
+    <UserProvider>
+      <AppContent />
+    </UserProvider>
     </ThemeProvider>
   );
 }

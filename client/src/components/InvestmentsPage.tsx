@@ -260,15 +260,15 @@ const InvestmentsPage: React.FC = () => {
                 </button>
                 <button onClick={() => setActiveTab('calculator')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'calculator' ? 'bg-white dark:bg-gray-800 shadow text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}>
                   Calculator
-                </button>
-             </div>
+          </button>
+        </div>
 
             <div className="relative inline-block">
               <button onClick={() => document.getElementById('investment-import-file')?.click()} className="px-4 py-2 bg-green-50 text-green-600 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400 rounded-xl transition-all flex items-center gap-2 border border-green-200 dark:border-green-800 font-medium">
                 <Upload size={18} /> Import
               </button>
               <input id="investment-import-file" type="file" accept=".json,.csv" onChange={handleImport} className="hidden" />
-            </div>
+          </div>
             
             <button onClick={() => handleExport('json')} className="px-4 py-2 bg-purple-50 text-purple-600 hover:bg-purple-100 dark:bg-purple-900/20 dark:text-purple-400 rounded-xl transition-all flex items-center gap-2 border border-purple-200 dark:border-purple-800 font-medium">
               <Download size={18} /> Export
@@ -295,7 +295,7 @@ const InvestmentsPage: React.FC = () => {
               <p className="text-3xl font-bold">₹{totalCurrentValue.toLocaleString()}</p>
             </div>
             <Activity className="absolute right-4 bottom-4 text-green-400/30 w-16 h-16" />
-          </div>
+            </div>
           <div className="bg-gradient-to-br from-purple-500 to-violet-600 text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
             <div className="relative z-10">
               <p className="text-purple-100 text-sm font-medium mb-1">Monthly SIP</p>
@@ -340,13 +340,13 @@ const InvestmentsPage: React.FC = () => {
                          <Legend layout="vertical" verticalAlign="middle" align="right" />
                        </PieChart>
                      </ResponsiveContainer>
-                  </div>
+                </div>
                 ) : (
                   <div className="h-[300px] flex items-center justify-center text-gray-400">
                     No investment data available
-                  </div>
-                )}
-              </div>
+                      </div>
+                    )}
+                </div>
 
               {/* Portfolio Health / Insights */}
               <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
@@ -360,29 +360,29 @@ const InvestmentsPage: React.FC = () => {
                      <p className="text-xs text-blue-600/80 mt-1">
                        {allocationData.length > 1 ? 'Great job investing across multiple asset classes!' : 'Consider adding different types of investments.'}
                      </p>
-                  </div>
+                </div>
                   <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-100 dark:border-green-800">
                      <p className="text-sm font-bold text-green-800 dark:text-green-300">Projected 5-Year Value</p>
                      <p className="text-2xl font-bold text-green-600">
                        ₹{Math.round(totalCurrentValue * Math.pow(1.12, 5)).toLocaleString()}
                      </p>
                      <p className="text-xs text-green-600/80 mt-1">Based on conservative 12% annual growth.</p>
-                  </div>
+                </div>
                 </div>
               </div>
-            </div>
+          </div>
 
             {/* Investments List */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {investments.map((inv) => {
-                const projected = calculateFV(inv.principal, inv.monthly_contribution, inv.expected_return_rate, inv.tenure_months / 12);
-                const monthsElapsed = inv.start_date ? Math.floor((new Date().getTime() - new Date(inv.start_date).getTime()) / (1000 * 60 * 60 * 24 * 30)) : 0;
-                const progress = Math.min((monthsElapsed / inv.tenure_months) * 100, 100);
-                
-                return (
+          {investments.map((inv) => {
+            const projected = calculateFV(inv.principal, inv.monthly_contribution, inv.expected_return_rate, inv.tenure_months / 12);
+            const monthsElapsed = inv.start_date ? Math.floor((new Date().getTime() - new Date(inv.start_date).getTime()) / (1000 * 60 * 60 * 24 * 30)) : 0;
+            const progress = Math.min((monthsElapsed / inv.tenure_months) * 100, 100);
+            
+            return (
                   <div key={inv.id} className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow">
                     <div className="p-6">
-                      <div className="flex justify-between items-start mb-4">
+                <div className="flex justify-between items-start mb-4">
                         <div>
                           <h3 className="font-bold text-lg text-gray-900 dark:text-white">{inv.name}</h3>
                           <span className="inline-block px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded text-xs font-bold mt-1 uppercase">
@@ -392,33 +392,33 @@ const InvestmentsPage: React.FC = () => {
                         <div className="flex gap-1">
                           <button onClick={() => handleEdit(inv)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-blue-600"><Edit2 size={16}/></button>
                           <button onClick={() => handleDelete(inv.id, inv.name)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-red-600"><Trash2 size={16}/></button>
-                        </div>
                       </div>
-
+                    </div>
+                    
                       {inv.type === 'espp' ? (
                         <div className="space-y-3">
-                           {(() => {
+                    {(() => {
                              const gains = calculateESPPGains(inv);
                              return (
                                <>
                                  <div className="grid grid-cols-2 gap-3 text-sm">
-                                   <div>
+                            <div>
                                      <p className="text-gray-500 text-xs">Total Shares</p>
                                      <p className="font-bold">{gains.totalShares.toFixed(2)}</p>
-                                   </div>
-                                   <div>
+                            </div>
+                            <div>
                                      <p className="text-gray-500 text-xs">Current Value</p>
                                      <p className="font-bold text-green-600">₹{Math.round(gains.currentValue * 83).toLocaleString()}</p>
-                                   </div>
-                                 </div>
+                            </div>
+                            </div>
                                  <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-100 dark:border-green-800">
                                    <div className="flex justify-between items-center">
                                       <span className="text-xs font-medium text-green-800 dark:text-green-300">Total Gain</span>
                                       <span className="text-sm font-bold text-green-600">
                                         +₹{Math.round(gains.totalGain * 83).toLocaleString()} ({gains.gainPercent.toFixed(1)}%)
                                       </span>
-                                   </div>
-                                 </div>
+                            </div>
+                          </div>
                                </>
                              );
                            })()}
@@ -431,24 +431,24 @@ const InvestmentsPage: React.FC = () => {
                            </div>
                            <div className="flex justify-between text-sm">
                              <span className="text-gray-500">Monthly SIP</span>
-                             <span className="font-bold">₹{inv.monthly_contribution.toLocaleString()}</span>
-                           </div>
+                      <span className="font-bold">₹{inv.monthly_contribution.toLocaleString()}</span>
+                    </div>
                            <div className="flex justify-between text-sm">
                              <span className="text-gray-500">Exp. Return</span>
                              <span className="font-bold text-green-600">{inv.expected_return_rate}%</span>
-                           </div>
-                        </div>
+                    </div>
+                  </div>
                       )}
 
                       <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
                          <div className="flex justify-between text-xs mb-1">
                            <span className="text-gray-500">Progress ({monthsElapsed}/{inv.tenure_months}m)</span>
                            <span className="font-bold text-blue-600">{progress.toFixed(0)}%</span>
-                         </div>
+                    </div>
                          <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
                            <div className="bg-blue-600 h-full rounded-full transition-all duration-500" style={{width: `${progress}%`}}></div>
-                         </div>
-                      </div>
+                    </div>
+                    </div>
                     </div>
                   </div>
                 );
@@ -465,15 +465,15 @@ const InvestmentsPage: React.FC = () => {
                   <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Initial Amount (₹)</label>
                   <input type="number" value={calcPrincipal} onChange={(e) => setCalcPrincipal(Number(e.target.value))} className="w-full px-4 py-3 rounded-xl border bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-purple-500 outline-none"/>
                 </div>
-                <div>
+                    <div>
                   <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Monthly SIP (₹)</label>
                   <input type="number" value={calcMonthly} onChange={(e) => setCalcMonthly(Number(e.target.value))} className="w-full px-4 py-3 rounded-xl border bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-purple-500 outline-none"/>
-                </div>
-                <div>
+                    </div>
+                    <div>
                   <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Expected Return (%)</label>
                   <input type="number" value={calcRate} onChange={(e) => setCalcRate(Number(e.target.value))} className="w-full px-4 py-3 rounded-xl border bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-purple-500 outline-none"/>
-                </div>
-                <div>
+                    </div>
+                    <div>
                   <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Time Period (Years)</label>
                   <input type="number" value={calcYears} onChange={(e) => setCalcYears(Number(e.target.value))} className="w-full px-4 py-3 rounded-xl border bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-purple-500 outline-none"/>
                 </div>
@@ -500,7 +500,7 @@ const InvestmentsPage: React.FC = () => {
                   </div>
                 );
               })()}
-           </div>
+                </div>
         )}
 
         {/* Add/Edit Form (Keep existing structure but style it better if needed) */}
@@ -555,7 +555,7 @@ const InvestmentsPage: React.FC = () => {
                     </form>
                  </div>
               </div>
-           </div>
+          </div>
         )}
 
       </div>
