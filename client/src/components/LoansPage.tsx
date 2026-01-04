@@ -4,7 +4,7 @@ import { Loan, UserProfile } from '../types';
 import { useUser } from '../UserContext';
 import {
   PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  AreaChart, Area
+  AreaChart, Area, ComposedChart, Line, Scatter
 } from 'recharts';
 import { 
   Edit2, Trash2, Plus, Download, Upload, Lightbulb, TrendingUp, Calendar, DollarSign,
@@ -144,23 +144,48 @@ const LoansPage: React.FC = () => {
     const startDate = new Date(loan.start_date);
     const today = new Date();
     const monthsElapsed = Math.max(0, (today.getFullYear() - startDate.getFullYear()) * 12 + (today.getMonth() - startDate.getMonth()));
-    const currentInstallmentNo = Math.min(monthsElapsed + 1, loan.tenure);
     const schedule = calculateAccurateAmortization(loan);
-    const currentInstallment = schedule[currentInstallmentNo - 1] || schedule[0];
-    const remainingInstallments = Math.max(0, loan.tenure - monthsElapsed);
+    
+    const paidInstallments = Math.min(monthsElapsed, loan.tenure);
+    const currentOutstanding = paidInstallments > 0 ? schedule[paidInstallments - 1].closingPrincipal : loan.principal;
+    
+    // Identify next installment details
+    const nextIndex = Math.min(paidInstallments, loan.tenure - 1);
+    const nextInstallment = schedule[nextIndex];
+    
+    // Calculate historical interest
+    let interestPaidSoFar = 0;
+    for (let i = 0; i < paidInstallments; i++) {
+      if (schedule[i]) interestPaidSoFar += schedule[i].interest;
+    }
+
     const currentInstallmentDate = new Date(startDate);
-    currentInstallmentDate.setMonth(currentInstallmentDate.getMonth() + currentInstallmentNo - 1);
+    currentInstallmentDate.setMonth(currentInstallmentDate.getMonth() + paidInstallments);
     
     return {
-      currentInstallmentNo,
+      currentInstallmentNo: paidInstallments + 1,
       totalInstallments: loan.tenure,
-      remainingInstallments,
-      currentOutstanding: currentInstallment.closingPrincipal,
-      currentMonthPrincipal: currentInstallment.principal,
-      currentMonthInterest: currentInstallment.interest,
+      remainingInstallments: Math.max(0, loan.tenure - paidInstallments),
+      currentOutstanding: currentOutstanding,
+      currentMonthPrincipal: nextInstallment ? nextInstallment.principal : 0,
+      currentMonthInterest: nextInstallment ? nextInstallment.interest : 0,
       currentInstallmentDate,
-      schedule
+      schedule,
+      interestPaidSoFar
     };
+  };
+
+  // Helper to calculate interest paid so far (from start to now)
+  const calculateHistoricalInterest = (loan: Loan) => {
+    const info = getCurrentInstallmentInfo(loan);
+    let pastInterest = 0;
+    // Sum interest from index 0 to currentInstallmentNo - 1
+    for (let i = 0; i < info.currentInstallmentNo - 1; i++) {
+        if (i < info.schedule.length) {
+            pastInterest += info.schedule[i].interest;
+        }
+    }
+    return pastInterest;
   };
 
   const calculateExtraPaymentImpact = (loan: Loan, extraAmount: number) => {
@@ -198,30 +223,56 @@ const LoansPage: React.FC = () => {
       return { loan, info };
     });
 
+    // Calculate payoff milestones
+    const loanPayoffIndices = activeLoans.map(loan => {
+       const info = getCurrentInstallmentInfo(loan);
+       return { 
+         name: loan.name, 
+         monthIndex: info.remainingInstallments 
+       };
+    });
+
     const data = [];
     const today = new Date();
+    // Initialize with Total Interest PAID SO FAR across all loans
+    let cumulativeInterest = activeLoans.reduce((sum, loan) => sum + calculateHistoricalInterest(loan), 0);
     
-    for (let i = 0; i <= maxMonths; i += 1) { // Plot every month
+    // Step size: Plot more points for smoother curve, but ensure milestones are included
+    const step = maxMonths > 120 ? 3 : 1;
+    
+    for (let i = 0; i <= maxMonths; i += 1) { 
       const date = new Date(today);
       date.setMonth(date.getMonth() + i);
       
-      let totalBalance = 0;
-      let totalInterest = 0;
+      let currentMonthBalance = 0;
+      let currentMonthInterest = 0;
 
       loanSchedules.forEach(({ info }) => {
-        // Find schedule entry for this future month
         const scheduleIndex = info.currentInstallmentNo - 1 + i;
-        if (scheduleIndex < info.schedule.length) {
-          totalBalance += info.schedule[scheduleIndex].closingPrincipal;
-          totalInterest += info.schedule[scheduleIndex].interest;
+        if (scheduleIndex < info.schedule.length && scheduleIndex >= 0) {
+          const entry = info.schedule[scheduleIndex];
+          currentMonthBalance += entry.closingPrincipal;
+          currentMonthInterest += entry.interest;
         }
       });
+      
+      cumulativeInterest += currentMonthInterest;
 
-      if (i % 3 === 0 || i === maxMonths) { // optimize data points for chart
+      // Check for milestones in this specific month
+      const finishedLoans = loanPayoffIndices.filter(l => l.monthIndex === i);
+      const isMilestone = finishedLoans.length > 0;
+      const isYearStart = date.getMonth() === 0;
+
+      // Always include data point if it's a milestone, year start, or matches step
+      if (isMilestone || isYearStart || i % step === 0 || i === maxMonths) { 
         data.push({
-          month: date.toLocaleString('default', { month: 'short', year: '2-digit' }),
-          Balance: Math.round(totalBalance),
-          Interest: Math.round(totalInterest)
+          month: date.toLocaleString('default', { month: 'short', year: 'numeric' }),
+          year: date.getFullYear(),
+          isYearStart: isYearStart,
+          Balance: Math.round(currentMonthBalance),
+          InterestPaid: Math.round(cumulativeInterest),
+          milestone: isMilestone ? finishedLoans.map(l => l.name).join(' & ') + ' Clear! 🏆' : null,
+          milestoneValue: isMilestone ? Math.round(currentMonthBalance) : null
         });
       }
     }
@@ -427,26 +478,117 @@ const LoansPage: React.FC = () => {
         {payoffData.length > 0 && (
           <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
             <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-              <TrendingUp className="text-green-500"/> Projected Debt Payoff Timeline
+              <TrendingUp className="text-green-500"/> Projected Debt Payoff & Cost Analysis
             </h3>
-            <div className="h-[300px]">
+            <div className="h-[400px]">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={payoffData}>
+                <ComposedChart data={payoffData} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
                   <defs>
                     <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.1}/>
+                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.2}/>
                       <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                  <XAxis dataKey="month" tick={{fontSize: 12}} />
-                  <YAxis tick={{fontSize: 12}} tickFormatter={(val) => `₹${val/1000}k`} />
-                  <Tooltip formatter={(val: number) => `₹${val.toLocaleString()}`} />
-                  <Area type="monotone" dataKey="Balance" stroke="#ef4444" fillOpacity={1} fill="url(#colorBalance)" strokeWidth={2} />
-                </AreaChart>
+                  <XAxis 
+                    dataKey="month" 
+                    tick={{fontSize: 11, fill: '#6B7280'}} 
+                    minTickGap={50}
+                    interval="preserveStartEnd"
+                  />
+                  <YAxis tick={{fontSize: 11, fill: '#6B7280'}} tickFormatter={(val) => `₹${val/1000}k`} />
+                  <Tooltip 
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}
+                    formatter={(val: any, name: string, props: any) => {
+                      if (name === 'Milestone') return [props.payload.milestone, '🏆 Milestone'];
+                      return [`₹${val.toLocaleString()}`, name === 'Balance' ? 'Outstanding Principal' : 'Cumulative Interest'];
+                    }}
+                    labelStyle={{ fontWeight: 'bold', color: '#374151' }}
+                  />
+                  <Legend verticalAlign="top" height={36} />
+                  <Area 
+                    type="monotone" 
+                    dataKey="Balance" 
+                    name="Balance"
+                    stroke="#ef4444" 
+                    fillOpacity={1} 
+                    fill="url(#colorBalance)" 
+                    strokeWidth={2} 
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="InterestPaid" 
+                    name="Interest Paid"
+                    stroke="#8b5cf6" 
+                    strokeWidth={3} 
+                    dot={false}
+                    activeDot={{ r: 6 }}
+                  />
+                  <Scatter 
+                    dataKey="milestoneValue" 
+                    name="Milestone"
+                    fill="#F59E0B"
+                    shape={(props: any) => {
+                      const { cx, cy, payload } = props;
+                      if (!payload.milestone) return null;
+                      return (
+                        <svg x={cx - 10} y={cy - 10} width={20} height={20} viewBox="0 0 24 24" fill="#F59E0B" stroke="white" strokeWidth="2">
+                          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                        </svg>
+                      );
+                    }}
+                  />
+                </ComposedChart>
               </ResponsiveContainer>
+            </div>
+            <p className="text-xs text-center text-gray-500 mt-4 bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
+              <span className="font-bold text-gray-700 dark:text-gray-300">Analysis:</span> The red curve tracks your journey to debt-freedom. 
+              The <span className="text-yellow-500 font-bold">★ Stars</span> mark exactly when each loan gets paid off!
+            </p>
+          </div>
+        )}
+
+        {/* Interest Analysis Heatmap */}
+        {activeLoans.length > 0 && (
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+              <Activity className="text-orange-500"/> Interest Efficiency Heatmap
+            </h3>
+            <div className="space-y-4">
+              {activeLoans.map(loan => {
+                 const info = getCurrentInstallmentInfo(loan);
+                 const interestRatio = (info.currentMonthInterest / loan.monthly_payment) * 100;
+                 return (
+                   <div key={loan.id} className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl">
+                     <div className="flex justify-between text-sm mb-2">
+                       <span className="font-bold">{loan.name}</span>
+                       <span className="text-gray-500">{Math.round(interestRatio)}% goes to Interest</span>
+                     </div>
+                     <div className="h-3 bg-gray-200 rounded-full overflow-hidden flex relative">
+                       <div 
+                         className="bg-red-500 h-full" 
+                         style={{ width: `${Math.min(interestRatio, 100)}%` }} 
+                       />
+                       <div 
+                         className="bg-green-500 h-full" 
+                         style={{ width: `${Math.max(100 - interestRatio, 0)}%` }} 
+                  />
                 </div>
-              </div>
+                     <div className="flex justify-between text-xs text-gray-500 mt-1 items-center">
+                       <span>Rate: {loan.interest_rate}%</span>
+                       <div className="flex items-center gap-1 text-gray-600 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded text-[10px] font-medium" title="Total Interest Paid Since Loan Start">
+                          Paid So Far: ₹{Math.round(calculateHistoricalInterest(loan)).toLocaleString()}
+                       </div>
+                       <span>EMI: ₹{loan.monthly_payment.toLocaleString()}</span>
+                     </div>
+                   </div>
+                 );
+              })}
+            </div>
+            <p className="text-xs text-gray-500 mt-4 text-center">
+              Loans with a larger <span className="text-red-500 font-bold">Red</span> bar are "burning" more money. Focus on paying these down or refinancing.
+            </p>
+          </div>
         )}
 
         {/* Strategy & Recommendations */}

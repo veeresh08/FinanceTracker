@@ -1,14 +1,16 @@
+
 import React, { useEffect, useState } from 'react';
 import { api } from '../api';
 import { Investment } from '../types';
 import { useUser } from '../UserContext';
 import {
-  PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer
+  PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+  BarChart, Bar
 } from 'recharts';
 import { 
-  TrendingUp, PieChart as PieIcon, Activity, Plus, Download, Upload, 
-  Trash2, Edit2, Target, Briefcase, Landmark, Calculator,
-  ShieldCheck
+  TrendingUp, PieChart as PieIcon, DollarSign, Activity, Plus, Download, Upload, 
+  Trash2, Edit2, Target, Briefcase, Landmark, ArrowUpRight, Calculator,
+  ShieldCheck, AlertCircle
 } from 'lucide-react';
 
 const InvestmentsPage: React.FC = () => {
@@ -36,7 +38,7 @@ const InvestmentsPage: React.FC = () => {
     tenure_months: 60,
     current_value: 0,
     notes: '',
-    status: 'active' as Investment['status'],
+    status: 'active',
     // ESPP-specific fields
     purchase_price: 0,
     current_stock_price: 0,
@@ -331,7 +333,7 @@ const InvestmentsPage: React.FC = () => {
                            paddingAngle={5}
                            dataKey="value"
                          >
-                           {allocationData.map((_, index) => (
+                           {allocationData.map((entry, index) => (
                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                            ))}
                          </Pie>
@@ -374,6 +376,7 @@ const InvestmentsPage: React.FC = () => {
             {/* Investments List */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {investments.map((inv) => {
+            const projected = calculateFV(inv.principal, inv.monthly_contribution, inv.expected_return_rate, inv.tenure_months / 12);
             const monthsElapsed = inv.start_date ? Math.floor((new Date().getTime() - new Date(inv.start_date).getTime()) / (1000 * 60 * 60 * 24 * 30)) : 0;
             const progress = Math.min((monthsElapsed / inv.tenure_months) * 100, 100);
             
