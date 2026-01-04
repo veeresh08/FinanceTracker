@@ -4,7 +4,7 @@ import { Loan, UserProfile } from '../types';
 import { useUser } from '../UserContext';
 import {
   PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  AreaChart, Area, ComposedChart, Line, Scatter
+  Area, ComposedChart, Line, Scatter
 } from 'recharts';
 import { 
   Edit2, Trash2, Plus, Download, Upload, Lightbulb, TrendingUp, Calendar, DollarSign,
@@ -155,9 +155,14 @@ const LoansPage: React.FC = () => {
     
     // Calculate historical interest
     let interestPaidSoFar = 0;
-    for (let i = 0; i < paidInstallments; i++) {
-      if (schedule[i]) interestPaidSoFar += schedule[i].interest;
-    }
+    let totalLifetimeInterest = 0;
+    
+    schedule.forEach(inst => {
+      totalLifetimeInterest += inst.interest;
+      if (inst.installmentNo <= paidInstallments) {
+        interestPaidSoFar += inst.interest;
+      }
+    });
 
     const currentInstallmentDate = new Date(startDate);
     currentInstallmentDate.setMonth(currentInstallmentDate.getMonth() + paidInstallments);
@@ -171,7 +176,9 @@ const LoansPage: React.FC = () => {
       currentMonthInterest: nextInstallment ? nextInstallment.interest : 0,
       currentInstallmentDate,
       schedule,
-      interestPaidSoFar
+      interestPaidSoFar,
+      totalLifetimeInterest,
+      futureInterest: totalLifetimeInterest - interestPaidSoFar
     };
   };
 
@@ -343,9 +350,13 @@ const LoansPage: React.FC = () => {
   }
 
   const activeLoans = loans.filter(l => l.status === 'active');
-  const totalPrincipal = loans.reduce((sum, loan) => sum + loan.principal, 0);
+  const todayDateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  
+  // Real-time calculations
+  const totalOutstandingPrincipal = activeLoans.reduce((sum, loan) => sum + getCurrentInstallmentInfo(loan).currentOutstanding, 0);
+  const totalFutureInterest = activeLoans.reduce((sum, loan) => sum + getCurrentInstallmentInfo(loan).futureInterest, 0);
   const totalMonthlyPayment = activeLoans.reduce((sum, loan) => sum + loan.monthly_payment, 0);
-  const totalInterest = loans.reduce((sum, loan) => sum + (loan.total_interest || 0), 0);
+  const totalRemainingCost = totalOutstandingPrincipal + totalFutureInterest;
   
   // DTI Calculation
   const monthlyIncome = profile?.monthly_salary || 1; // Avoid division by zero
@@ -397,38 +408,45 @@ const LoansPage: React.FC = () => {
               <Plus size={18} /> Add New Loan
           </button>
                 </div>
-                </div>
+        </div>
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
             <div className="relative z-10">
-              <p className="text-blue-100 text-sm font-medium mb-1">Total Active Loans</p>
-              <p className="text-4xl font-bold">{activeLoans.length}</p>
+              <p className="text-blue-100 text-xs font-bold uppercase mb-1">Outstanding Principal</p>
+              <p className="text-3xl font-bold">₹{Math.round(totalOutstandingPrincipal).toLocaleString()}</p>
+              <p className="text-xs text-blue-200 mt-1">As of {todayDateStr}</p>
             </div>
-            <Activity className="absolute right-4 bottom-4 text-blue-400/30 w-16 h-16" />
-          </div>
+            <DollarSign className="absolute right-4 bottom-4 text-blue-400/30 w-16 h-16" />
+                </div>
+
           <div className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
             <div className="relative z-10">
-              <p className="text-indigo-100 text-sm font-medium mb-1">Total Principal</p>
-              <p className="text-3xl font-bold">₹{totalPrincipal.toLocaleString()}</p>
+              <p className="text-indigo-100 text-xs font-bold uppercase mb-1">Future Interest Cost</p>
+              <p className="text-3xl font-bold">₹{Math.round(totalFutureInterest).toLocaleString()}</p>
+              <p className="text-xs text-indigo-200 mt-1">Cost to keep debt</p>
             </div>
-            <DollarSign className="absolute right-4 bottom-4 text-indigo-400/30 w-16 h-16" />
-          </div>
+            <TrendingUp className="absolute right-4 bottom-4 text-indigo-400/30 w-16 h-16" />
+                </div>
+
+          <div className="bg-gradient-to-br from-orange-500 to-red-600 text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
+            <div className="relative z-10">
+              <p className="text-orange-100 text-xs font-bold uppercase mb-1">Total Remaining Cost</p>
+              <p className="text-3xl font-bold">₹{Math.round(totalRemainingCost).toLocaleString()}</p>
+              <p className="text-xs text-orange-200 mt-1">Principal + Future Interest</p>
+            </div>
+            <Target className="absolute right-4 bottom-4 text-orange-400/30 w-16 h-16" />
+                </div>
+
           <div className="bg-gradient-to-br from-purple-500 to-pink-600 text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
             <div className="relative z-10">
-              <p className="text-purple-100 text-sm font-medium mb-1">Total Monthly EMI</p>
+              <p className="text-purple-100 text-xs font-bold uppercase mb-1">Monthly Commitment</p>
               <p className="text-3xl font-bold">₹{totalMonthlyPayment.toLocaleString()}</p>
+              <p className="text-xs text-purple-200 mt-1">Total EMI</p>
             </div>
             <Calendar className="absolute right-4 bottom-4 text-purple-400/30 w-16 h-16" />
           </div>
-          <div className="bg-gradient-to-br from-orange-500 to-red-600 text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
-            <div className="relative z-10">
-              <p className="text-orange-100 text-sm font-medium mb-1">Total Interest</p>
-              <p className="text-3xl font-bold">₹{totalInterest.toLocaleString()}</p>
-                </div>
-            <TrendingUp className="absolute right-4 bottom-4 text-orange-400/30 w-16 h-16" />
-                </div>
                 </div>
 
         {/* Financial Health & DTI Section (New) */}
@@ -530,7 +548,7 @@ const LoansPage: React.FC = () => {
                     fill="#F59E0B"
                     shape={(props: any) => {
                       const { cx, cy, payload } = props;
-                      if (!payload.milestone) return null;
+                      if (!payload.milestone) return <></>;
                       return (
                         <svg x={cx - 10} y={cy - 10} width={20} height={20} viewBox="0 0 24 24" fill="#F59E0B" stroke="white" strokeWidth="2">
                           <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
@@ -540,7 +558,7 @@ const LoansPage: React.FC = () => {
                   />
                 </ComposedChart>
               </ResponsiveContainer>
-            </div>
+                </div>
             <p className="text-xs text-center text-gray-500 mt-4 bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
               <span className="font-bold text-gray-700 dark:text-gray-300">Analysis:</span> The red curve tracks your journey to debt-freedom. 
               The <span className="text-yellow-500 font-bold">★ Stars</span> mark exactly when each loan gets paid off!
@@ -562,9 +580,15 @@ const LoansPage: React.FC = () => {
                    <div key={loan.id} className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl">
                      <div className="flex justify-between text-sm mb-2">
                        <span className="font-bold">{loan.name}</span>
-                       <span className="text-gray-500">{Math.round(interestRatio)}% goes to Interest</span>
+                       <span className="text-gray-500 text-xs">
+                         Total Cost: ₹{Math.round(loan.principal + info.totalLifetimeInterest).toLocaleString()}
+                       </span>
                      </div>
-                     <div className="h-3 bg-gray-200 rounded-full overflow-hidden flex relative">
+                     <div className="flex justify-between text-xs text-gray-500 mb-1">
+                        <span>Paid Interest: <span className="font-semibold text-gray-700 dark:text-gray-300">₹{Math.round(info.interestPaidSoFar).toLocaleString()}</span></span>
+                        <span>Future Interest: <span className="font-semibold text-orange-600">₹{Math.round(info.futureInterest).toLocaleString()}</span></span>
+                     </div>
+                     <div className="h-3 bg-gray-200 rounded-full overflow-hidden flex relative" title="Current Monthly EMI Breakdown">
                        <div 
                          className="bg-red-500 h-full" 
                          style={{ width: `${Math.min(interestRatio, 100)}%` }} 
@@ -574,13 +598,10 @@ const LoansPage: React.FC = () => {
                          style={{ width: `${Math.max(100 - interestRatio, 0)}%` }} 
                   />
                 </div>
-                     <div className="flex justify-between text-xs text-gray-500 mt-1 items-center">
-                       <span>Rate: {loan.interest_rate}%</span>
-                       <div className="flex items-center gap-1 text-gray-600 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded text-[10px] font-medium" title="Total Interest Paid Since Loan Start">
-                          Paid So Far: ₹{Math.round(calculateHistoricalInterest(loan)).toLocaleString()}
-                       </div>
+                     <div className="flex justify-between text-xs text-gray-500 mt-1">
+                       <span>{Math.round(interestRatio)}% of EMI goes to Interest</span>
                        <span>EMI: ₹{loan.monthly_payment.toLocaleString()}</span>
-                     </div>
+              </div>
                    </div>
                  );
               })}
@@ -703,8 +724,8 @@ const LoansPage: React.FC = () => {
             </div>
           
             <div className="overflow-x-auto">
-              <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-gray-900/50 text-xs uppercase text-gray-500 font-semibold">
+              <table className="w-full text-sm text-left">
+                <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                   <tr>
                   <th className="px-6 py-4 w-4">
                     <input 
@@ -715,12 +736,12 @@ const LoansPage: React.FC = () => {
                     />
                   </th>
                   <th className="px-6 py-4 text-left">Loan Name</th>
-                  <th className="px-6 py-4 text-left">Principal</th>
-                  <th className="px-6 py-4 text-left">Rate</th>
+                  <th className="px-6 py-4 text-right">Outstanding Principal</th>
+                  <th className="px-6 py-4 text-right">Rate</th>
                   <th className="px-6 py-4 text-right">Monthly EMI</th>
-                  <th className="px-6 py-4 text-left">Start Date</th>
-                  <th className="px-6 py-4 text-left">Payoff Date</th>
-                  <th className="px-6 py-4 text-left w-48">Progress</th>
+                  <th className="px-6 py-4 text-right">Interest Paid</th>
+                  <th className="px-6 py-4 text-right">Future Interest</th>
+                  <th className="px-6 py-4 text-left w-32">Progress</th>
                   <th className="px-6 py-4 text-center">Actions</th>
                   </tr>
                 </thead>
@@ -728,9 +749,7 @@ const LoansPage: React.FC = () => {
                 {loans.map((loan) => {
                    const installmentInfo = getCurrentInstallmentInfo(loan);
                    const progress = Math.min((installmentInfo.currentInstallmentNo / loan.tenure) * 100, 100);
-                   const payoffDate = new Date(loan.start_date);
-                   payoffDate.setMonth(payoffDate.getMonth() + loan.tenure);
-
+                   
                    return (
                     <tr key={loan.id} className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${selectedLoans.includes(loan.id) ? 'bg-blue-50/50' : ''}`}>
                       <td className="px-6 py-4">
@@ -745,9 +764,12 @@ const LoansPage: React.FC = () => {
                         {loan.name}
                         <span className="block text-xs text-gray-500 uppercase mt-0.5">{loan.type.replace('_', ' ')}</span>
                       </td>
-                      <td className="px-6 py-4 text-gray-900 dark:text-white">₹{loan.principal.toLocaleString()}</td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-1">
+                      <td className="px-6 py-4 text-right text-gray-900 dark:text-white font-bold">
+                        ₹{Math.round(installmentInfo.currentOutstanding).toLocaleString()}
+                        <div className="text-[10px] text-gray-400 font-normal">Original: ₹{loan.principal.toLocaleString()}</div>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-1">
                           <span className={`font-bold ${loan.interest_rate > 12 ? 'text-red-600' : loan.interest_rate > 8 ? 'text-orange-600' : 'text-green-600'}`}>
                             {loan.interest_rate}%
                         </span>
@@ -755,10 +777,10 @@ const LoansPage: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-right font-bold text-purple-600 dark:text-purple-400">₹{loan.monthly_payment.toLocaleString()}</td>
-                      <td className="px-6 py-4 text-sm text-gray-500">{new Date(loan.start_date).toLocaleDateString()}</td>
-                      <td className="px-6 py-4 text-sm text-gray-500">{payoffDate.toLocaleDateString()}</td>
+                      <td className="px-6 py-4 text-right text-gray-500 font-medium">₹{Math.round(installmentInfo.interestPaidSoFar).toLocaleString()}</td>
+                      <td className="px-6 py-4 text-right text-orange-600 font-bold">₹{Math.round(installmentInfo.futureInterest).toLocaleString()}</td>
                       <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
                           <div className="flex-1 h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                             <div className="h-full bg-green-500 rounded-full" style={{ width: `${progress}%` }}></div>
                               </div>
