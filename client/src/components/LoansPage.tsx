@@ -563,7 +563,7 @@ const LoansPage: React.FC = () => {
             <div className="overflow-x-auto">
               <table className="w-full">
               <thead className="bg-gray-50 dark:bg-gray-900/50 text-xs uppercase text-gray-500 font-semibold">
-                <tr>
+                  <tr>
                   <th className="px-6 py-4 w-4">
                     <input 
                       type="checkbox" 
@@ -656,7 +656,7 @@ const LoansPage: React.FC = () => {
                           const info = getCurrentInstallmentInfo(l);
                           return sum + info.currentOutstanding;
                         }, 0)).toLocaleString()}
-                      </p>
+            </p>
                     </div>
           </div>
 

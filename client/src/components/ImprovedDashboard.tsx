@@ -498,3 +498,184 @@ const ImprovedDashboard: React.FC = () => {
 };
 
 export default ImprovedDashboard;
+
+        {/* Debt Breakdown Pie Chart */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 Debt Composition</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={debtBreakdownData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={(props: any) => `${props.name}: ${currencySymbol}${props.value.toLocaleString()}`}
+                  outerRadius={100}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {debtBreakdownData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value: any) => `${currencySymbol}${value.toLocaleString()}`} />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="mt-4 space-y-2">
+              <div className="flex justify-between items-center p-2 bg-blue-50 rounded">
+                <span className="text-sm font-medium text-gray-700">Principal Amount</span>
+                <span className="font-bold text-blue-600">{currencySymbol} {summary.totalPrincipal.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center p-2 bg-red-50 rounded">
+                <span className="text-sm font-medium text-gray-700">Total Interest</span>
+                <span className="font-bold text-red-600">{currencySymbol} {summary.totalInterest.toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Debt-to-Income Ratio */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">📈 Debt-to-Income Ratio</h3>
+            <div className="text-center mb-4">
+              <div className="text-6xl font-bold text-blue-600 mb-2">{summary.debtToIncomeRatio.toFixed(1)}%</div>
+              <p className="text-sm text-gray-600">
+                {summary.debtToIncomeRatio < 36 ? '✅ Excellent - Very healthy' : 
+                 summary.debtToIncomeRatio < 43 ? '⚠️ Manageable - Monitor closely' : 
+                 '🚨 High Risk - Consider reducing debt'}
+              </p>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-4 mb-4">
+              <div
+                className={`h-4 rounded-full transition-all ${
+                  summary.debtToIncomeRatio < 36 ? 'bg-green-500' :
+                  summary.debtToIncomeRatio < 43 ? 'bg-yellow-500' : 'bg-red-500'
+                }`}
+                style={{ width: `${Math.min(summary.debtToIncomeRatio, 100)}%` }}
+              ></div>
+            </div>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Monthly Income:</span>
+                <span className="font-semibold">{currencySymbol} {summary.totalIncome.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Monthly Debt Payments:</span>
+                <span className="font-semibold text-red-600">{currencySymbol} {summary.monthlyPayments.toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Loan Payment Timeline - LINE CHART */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">📉 Loan Payment Timeline (Remaining Balance Over Time)</h3>
+          <p className="text-sm text-gray-500 mb-4">Hover over the chart to see detailed breakdown for each year</p>
+          <ResponsiveContainer width="100%" height={400}>
+            <LineChart data={timelineData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis 
+                dataKey="month" 
+                label={{ value: 'Months from Now', position: 'insideBottom', offset: -5 }}
+                stroke="#6b7280"
+                tickFormatter={(month) => {
+                  const years = Math.floor(month / 12);
+                  const months = month % 12;
+                  return years > 0 ? `${years}y ${months}m` : `${months}m`;
+                }}
+              />
+              <YAxis 
+                label={{ value: `Remaining Balance (${currencySymbol})`, angle: -90, position: 'insideLeft' }}
+                tickFormatter={(value) => `${currencySymbol}${(value / 1000).toFixed(0)}k`}
+                stroke="#6b7280"
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Legend />
+              {loans.map((loan, index) => (
+                <Line
+                  key={loan.name}
+                  type="monotone"
+                  dataKey={loan.name}
+                  stroke={COLORS[index % COLORS.length]}
+                  strokeWidth={2}
+                  dot={false}
+                  activeDot={{ r: 6 }}
+                  name={loan.name}
+                />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Individual Loans Table */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">💼 Individual Loan Details</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Loan Name</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Principal</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Interest</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total Cost</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Monthly EMI</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Tenure</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {loans.map((loan, index) => (
+                  <tr key={index} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 text-sm font-medium text-gray-900">{loan.name}</td>
+                    <td className="px-4 py-3 text-sm text-right text-blue-600">{currencySymbol} {loan.principal.toLocaleString()}</td>
+                    <td className="px-4 py-3 text-sm text-right text-red-600">{currencySymbol} {loan.interest.toLocaleString()}</td>
+                    <td className="px-4 py-3 text-sm text-right font-bold text-gray-900">{currencySymbol} {(loan.principal + loan.interest).toLocaleString()}</td>
+                    <td className="px-4 py-3 text-sm text-right text-orange-600">{currencySymbol} {loan.monthlyPayment.toLocaleString()}</td>
+                    <td className="px-4 py-3 text-sm text-right text-gray-600">{Math.floor(loan.tenure / 12)}y {loan.tenure % 12}m</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot className="bg-gray-50 font-bold">
+                <tr>
+                  <td className="px-4 py-3 text-sm text-gray-900">TOTAL</td>
+                  <td className="px-4 py-3 text-sm text-right text-blue-600">{currencySymbol} {summary.totalPrincipal.toLocaleString()}</td>
+                  <td className="px-4 py-3 text-sm text-right text-red-600">{currencySymbol} {summary.totalInterest.toLocaleString()}</td>
+                  <td className="px-4 py-3 text-sm text-right text-gray-900">{currencySymbol} {summary.totalDebt.toLocaleString()}</td>
+                  <td className="px-4 py-3 text-sm text-right text-orange-600">{currencySymbol} {summary.monthlyPayments.toLocaleString()}</td>
+                  <td className="px-4 py-3 text-sm text-right text-gray-600">-</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        {/* Recommendations */}
+        {recommendations.length > 0 && (
+          <div className="bg-yellow-50 rounded-lg border border-yellow-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <span className="text-2xl mr-2">💡</span>
+              Smart Recommendations
+            </h3>
+            <div className="space-y-3">
+              {recommendations.map((rec, index) => (
+                <div
+                  key={index}
+                  className={`p-3 rounded-lg ${
+                    rec.type === 'warning'
+                      ? 'bg-yellow-100 border-l-4 border-yellow-500'
+                      : 'bg-green-100 border-l-4 border-green-500'
+                  }`}
+                >
+                  <p className={`text-sm ${rec.type === 'warning' ? 'text-yellow-800' : 'text-green-800'}`}>
+                    {rec.message}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default ImprovedDashboard;
