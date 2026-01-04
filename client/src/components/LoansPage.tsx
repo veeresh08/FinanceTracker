@@ -566,51 +566,6 @@ const LoansPage: React.FC = () => {
           </div>
         )}
 
-        {/* Interest Analysis Heatmap */}
-        {activeLoans.length > 0 && (
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-              <Activity className="text-orange-500"/> Interest Efficiency Heatmap
-            </h3>
-            <div className="space-y-4">
-              {activeLoans.map(loan => {
-                 const info = getCurrentInstallmentInfo(loan);
-                 const interestRatio = (info.currentMonthInterest / loan.monthly_payment) * 100;
-                 return (
-                   <div key={loan.id} className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl">
-                     <div className="flex justify-between text-sm mb-2">
-                       <span className="font-bold">{loan.name}</span>
-                       <span className="text-gray-500 text-xs">
-                         Total Cost: ₹{Math.round(loan.principal + info.totalLifetimeInterest).toLocaleString()}
-                       </span>
-                     </div>
-                     <div className="flex justify-between text-xs text-gray-500 mb-1">
-                        <span>Paid Interest: <span className="font-semibold text-gray-700 dark:text-gray-300">₹{Math.round(info.interestPaidSoFar).toLocaleString()}</span></span>
-                        <span>Future Interest: <span className="font-semibold text-orange-600">₹{Math.round(info.futureInterest).toLocaleString()}</span></span>
-                     </div>
-                     <div className="h-3 bg-gray-200 rounded-full overflow-hidden flex relative" title="Current Monthly EMI Breakdown">
-                       <div 
-                         className="bg-red-500 h-full" 
-                         style={{ width: `${Math.min(interestRatio, 100)}%` }} 
-                       />
-                       <div 
-                         className="bg-green-500 h-full" 
-                         style={{ width: `${Math.max(100 - interestRatio, 0)}%` }} 
-                  />
-                </div>
-                     <div className="flex justify-between text-xs text-gray-500 mt-1">
-                       <span>{Math.round(interestRatio)}% of EMI goes to Interest</span>
-                       <span>EMI: ₹{loan.monthly_payment.toLocaleString()}</span>
-              </div>
-                   </div>
-                 );
-              })}
-            </div>
-            <p className="text-xs text-gray-500 mt-4 text-center">
-              Loans with a larger <span className="text-red-500 font-bold">Red</span> bar are "burning" more money. Focus on paying these down or refinancing.
-            </p>
-          </div>
-        )}
 
         {/* Strategy & Recommendations */}
         {activeLoans.length > 0 && (
