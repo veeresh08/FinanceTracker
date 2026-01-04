@@ -208,7 +208,7 @@ const LoansPage: React.FC = () => {
       let totalBalance = 0;
       let totalInterest = 0;
 
-      loanSchedules.forEach(({ loan, info }) => {
+      loanSchedules.forEach(({ info }) => {
         // Find schedule entry for this future month
         const scheduleIndex = info.currentInstallmentNo - 1 + i;
         if (scheduleIndex < info.schedule.length) {
